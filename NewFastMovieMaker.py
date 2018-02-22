@@ -1,6 +1,8 @@
 """
 A simple example of an animated plot
 SOURCE: http://matplotlib.org/examples/animation/simple_anim.html
+#to make a gif:
+https://eli.thegreenplace.net/2016/drawing-animated-gifs-with-matplotlib/
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,7 +20,7 @@ plt.rc('font', size=20)
 
 
 #IMPORTANT FLAG FOR EFFICIENT MOVIE MAKING (GLOBAL)
-get_data=1
+get_data=0
 
 #if get_data=1,
 #reads ascii files (slow) AND writes binary files
@@ -30,6 +32,12 @@ get_data=1
 #which is much more efficient
 ##used in both animate and the main function
 
+#could use os.path.isfile(fname) 
+#to deterimine if binary files already exist
+#but the problem is if you have re-written the ascii files
+#you want to read those and create new binary files
+#rather than reading the old (faulty?) files
+    
 ################################################################
 ################################################################
 ################################################################
@@ -62,7 +70,7 @@ def animate(i,scatter1,fileprefix,
     #get new particle positions from new integer time i
     ############################################################
     init_file=fileprefix+"%08d"%(i)
-
+    
     if get_data:
         #read ascii file
         particle_data = di.get_data(init_file,7,sep=" ")
@@ -109,12 +117,42 @@ def animate(i,scatter1,fileprefix,
     
     return scatter1,
 
+#--------------------------------------------------------------
+#add pin locations to scatter plot
+#--------------------------------------------------------------
+def plot_pins(scatter_axis, size=75,pin_file="pin_array.dat"):
+    '''plot the pinning array from ascii file with pin_file:
+    --------------------------------------------------
+    n     x     y    radius mag
+    int float float  float  float
+    ---------------------------------------------------
+    required args:
+    scatter_axis = matplotlib axes object
+
+    optional args:
+    size=75, to plot pin radius
+    pin_file="pin_array.dat"
+    '''
+
+    pin_data = di.get_data(pin_file,5,sep=" ")
+    pin_x = pin_data[1]
+    pin_y = pin_data[2]
+    pin_rad = pin_data[3]
+    pin_mag = pin_data[4]
+
+    scatter_axis.scatter(pin_x,pin_y,c="gray",alpha=0.4,s=size)
+
+    return
+
+
 ################################################################
 ################################################################
 ################################################################
 
 if __name__ == "__main__":
 
+    disk_size=100
+    radius_ratio=2.0
     #---------------------------
     #Create a grid figure -
     #overkill for this, but useful for including more data
@@ -127,6 +165,7 @@ if __name__ == "__main__":
 
     ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
 
+    plot_pins(ax1,size=disk_size)
     #create a simple figure
     #fig, ax = plt.subplots()
 
@@ -147,7 +186,14 @@ if __name__ == "__main__":
     ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
 
-    init_file=datafile_prefix+"00000000"
+    if 1:
+        starttime=40000020 #40000000
+    else:
+        starttime=4500000
+
+    time_inc=30   #increment to count by
+    maxtime=starttime + 30000 #maximum frame to read     
+    init_file=datafile_prefix+"%08d"%(starttime)
 
     if get_data:    
         particle_data = di.get_data(init_file,7,sep=" ")
@@ -175,13 +221,13 @@ if __name__ == "__main__":
     size  = np.zeros(len(type))
     for k in range(len(type)):
         if type[k]==2:
-            size[k]=50
+            size[k]=disk_size
         else:
-            size[k]=50*np.sqrt(2.0)
+            size[k]=disk_size*(radius_ratio**2) #size = scale*radius^2, i.e. area, not radius
             
 
     #make a two color map 
-    mycmap = colors.ListedColormap(['blue', 'red'])
+    mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
     
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
 
@@ -196,11 +242,9 @@ if __name__ == "__main__":
     #finally animate everything
     #------------------------------------------------------------------------   
 
-    time_inc=400   #increment to count by
-    maxtime=100000 #maximum frame to read
-
+    
     ani = animation.FuncAnimation(fig, 
-                                   animate, range(0,maxtime,time_inc), 
+                                   animate, range(starttime,maxtime,time_inc), 
                                    fargs=(scatter1,
                                           datafile_prefix,
                                           force_template,
