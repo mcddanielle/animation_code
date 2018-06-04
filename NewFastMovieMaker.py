@@ -20,7 +20,7 @@ plt.rc('font', size=20)
 
 
 #IMPORTANT FLAG FOR EFFICIENT MOVIE MAKING (GLOBAL)
-get_data=0
+get_data=1
 
 #if get_data=1,
 #reads ascii files (slow) AND writes binary files
@@ -113,7 +113,7 @@ def animate(i,scatter1,fileprefix,
     force_text.set_text(force_template%(i))
 
     #print current time to user 
-    print i
+    print(i)
     
     return scatter1,
 
@@ -186,13 +186,12 @@ if __name__ == "__main__":
     ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
 
-    if 1:
-        starttime=40000020 #40000000
-    else:
-        starttime=4500000
+  
+    starttime=50 
+    
 
-    time_inc=30   #increment to count by
-    maxtime=starttime + 30000 #maximum frame to read     
+    time_inc=50   #increment to count by
+    maxtime=starttime + 9900 #maximum frame to read     
     init_file=datafile_prefix+"%08d"%(starttime)
 
     if get_data:    
@@ -220,7 +219,7 @@ if __name__ == "__main__":
     #since we only do this once, that is fine.  multiple times?  fix!
     size  = np.zeros(len(type))
     for k in range(len(type)):
-        if type[k]==2:
+        if type[k]==1:
             size[k]=disk_size
         else:
             size[k]=disk_size*(radius_ratio**2) #size = scale*radius^2, i.e. area, not radius
