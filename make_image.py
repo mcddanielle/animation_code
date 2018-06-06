@@ -9,7 +9,7 @@ import matplotlib.colors as colors
 #from matplotlib import cm
 import matplotlib.ticker as ticker
 
-
+import sys
 #functions written by D.M. to get and plot specific data files
 import data_importerDM as di
 
@@ -32,8 +32,11 @@ def plot_pins(scatter_axis, size=75,pin_file="pin_array.dat"):
     size=75, to plot pin radius
     pin_file="pin_array.dat"
     '''
-
-    pin_data = di.get_data(pin_file,5,sep=" ")
+    try: 
+        pin_data = di.get_data(pin_file,5,sep=" ")
+    except:
+        print("No pinning data in expected format")
+        return
     pin_x = pin_data[1]
     pin_y = pin_data[2]
     pin_rad = pin_data[3]
@@ -59,7 +62,7 @@ if __name__ == "__main__":
     Sx=[0,60.0]
     Sy=[0,60.0]
 
-    plot_time=9950 #what frame to plot
+    plot_time=4500000 #9950 #what frame to plot
     #---------------------------
     #Set up a gridded figure
     #---------------------------
