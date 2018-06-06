@@ -59,10 +59,10 @@ if __name__ == "__main__":
     #---------------------------
     disk_size=100
 
-    Sx=[0,60.0]
-    Sy=[0,60.0]
+    Sx=[0,36.5]
+    Sy=[0,36.5]
 
-    plot_time=4500000 #9950 #what frame to plot
+    plot_time=190000 #time to plot
     #---------------------------
     #Set up a gridded figure
     #---------------------------
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             
 
     #make a two color map 
-    mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
+    mycmap = colors.ListedColormap(['mediumseagreen'])
 
     #---------------------------------------------------------
     #Finally plot the data
