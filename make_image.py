@@ -2,6 +2,9 @@
 Make a png/pdf of a single frame.
 """
 
+import matplotlib
+matplotlib.use('Agg')   #for batch jobs!!!
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
