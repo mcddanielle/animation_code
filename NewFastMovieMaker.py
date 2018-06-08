@@ -134,7 +134,12 @@ def plot_pins(scatter_axis, size=75,pin_file="pin_array.dat"):
     pin_file="pin_array.dat"
     '''
 
-    pin_data = di.get_data(pin_file,5,sep=" ")
+    try: 
+        pin_data = di.get_data(pin_file,5,sep=" ")
+    except:
+        print("No pinning data in expected format")
+        return
+    
     pin_x = pin_data[1]
     pin_y = pin_data[2]
     pin_rad = pin_data[3]
@@ -187,11 +192,11 @@ if __name__ == "__main__":
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
 
   
-    starttime=50 
+    starttime=0 
     
 
-    time_inc=50   #increment to count by
-    maxtime=starttime + 9900 #maximum frame to read     
+    time_inc=1000   #increment to count by
+    maxtime=starttime + 98000 #18000 #9900 #maximum frame to read     
     init_file=datafile_prefix+"%08d"%(starttime)
 
     if get_data:    

@@ -65,7 +65,7 @@ if __name__ == "__main__":
     Sx=[0,36.5]
     Sy=[0,36.5]
 
-    plot_time=190000 #time to plot
+    plot_time=19000 #time to plot
     #---------------------------
     #Set up a gridded figure
     #---------------------------
