@@ -15,34 +15,18 @@ import matplotlib.animation as animation
 
 #functions written by D.M. to get and plot specific data files
 import data_importerDM as di
+import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
 
 
-#IMPORTANT FLAG FOR EFFICIENT MOVIE MAKING (GLOBAL)
-get_data=1
-
-#if get_data=1,
-#reads ascii files (slow) AND writes binary files
-#for subsequent movie making from the same data sets
-#if get_data=0
-#code directly reads the ".npy" binary files
-#which contain numpy arrays of the data that also sits in the ascii file
-#note the similar naming structure
-#which is much more efficient
-##used in both animate and the main function
-
-#could use os.path.isfile(fname) 
-#to deterimine if binary files already exist
-#but the problem is if you have re-written the ascii files
-#you want to read those and create new binary files
-#rather than reading the old (faulty?) files
     
 ################################################################
 ################################################################
 ################################################################
 def animate(i,scatter1,fileprefix,
-            force_template,force_text):
+            force_template,force_text,
+            get_ascii_data=1):
     '''
     subroutine driven by the matplotlib animation library
 
@@ -71,7 +55,7 @@ def animate(i,scatter1,fileprefix,
     ############################################################
     init_file=fileprefix+"%08d"%(i)
     
-    if get_data:
+    if get_ascii_data:
         #read ascii file
         particle_data = di.get_data(init_file,7,sep=" ")
 
@@ -85,7 +69,7 @@ def animate(i,scatter1,fileprefix,
     xp = particle_data[2]
     yp = particle_data[3]
     
-    if get_data:
+    if get_ascii_data:
         #if we haven't save the data in binary format, do it now
         np.save(init_file,particle_data)
     
@@ -117,37 +101,6 @@ def animate(i,scatter1,fileprefix,
     
     return scatter1,
 
-#--------------------------------------------------------------
-#add pin locations to scatter plot
-#--------------------------------------------------------------
-def plot_pins(scatter_axis, size=75,pin_file="pin_array.dat"):
-    '''plot the pinning array from ascii file with pin_file:
-    --------------------------------------------------
-    n     x     y    radius mag
-    int float float  float  float
-    ---------------------------------------------------
-    required args:
-    scatter_axis = matplotlib axes object
-
-    optional args:
-    size=75, to plot pin radius
-    pin_file="pin_array.dat"
-    '''
-
-    try: 
-        pin_data = di.get_data(pin_file,5,sep=" ")
-    except:
-        print("No pinning data in expected format")
-        return
-    
-    pin_x = pin_data[1]
-    pin_y = pin_data[2]
-    pin_rad = pin_data[3]
-    pin_mag = pin_data[4]
-
-    scatter_axis.scatter(pin_x,pin_y,c="gray",alpha=0.4,s=size)
-
-    return
 
 
 ################################################################
@@ -155,6 +108,9 @@ def plot_pins(scatter_axis, size=75,pin_file="pin_array.dat"):
 ################################################################
 
 if __name__ == "__main__":
+
+    get_ascii_data = 1
+
 
     disk_size=100
     radius_ratio=2.0
@@ -170,9 +126,8 @@ if __name__ == "__main__":
 
     ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
 
-    plot_pins(ax1,size=disk_size)
-    #create a simple figure
-    #fig, ax = plt.subplots()
+    cpl.plot_pins(ax1,size=disk_size)
+
 
     #------------------------------------------------------------------------
     #get data for initial frame, 
@@ -199,7 +154,7 @@ if __name__ == "__main__":
     maxtime=starttime + 98000 #18000 #9900 #maximum frame to read     
     init_file=datafile_prefix+"%08d"%(starttime)
 
-    if get_data:    
+    if get_ascii_data:    
         particle_data = di.get_data(init_file,7,sep=" ")
     else:
         binary_file = "%s%s"%(init_file,".npy")
@@ -215,7 +170,7 @@ if __name__ == "__main__":
     #vy    = particle_data[5]
     #speed = particle_data[6]
 
-    if get_data:
+    if get_ascii_data:
         np.save(init_file,particle_data)
 
     #RESIZE PARTICLES BASED ON TYPE    
@@ -252,7 +207,8 @@ if __name__ == "__main__":
                                    fargs=(scatter1,
                                           datafile_prefix,
                                           force_template,
-                                          force_text),
+                                          force_text,
+                                          get_ascii_data=get_ascii_data),
                                    interval=20, blit=False)
 
     #following should resize system and pad, but with 1x1 grid
