@@ -13,59 +13,34 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 
 import sys
+
 #functions written by D.M. to get and plot specific data files
 import data_importerDM as di
+import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
 
 
-#--------------------------------------------------------------
-#add pin locations to scatter plot
-#--------------------------------------------------------------
-def plot_pins(scatter_axis, size=75,pin_file="pin_array.dat"):
-    '''plot the pinning array from ascii file with pin_file:
-    --------------------------------------------------
-    n     x     y    radius mag
-    int float float  float  float
-    ---------------------------------------------------
-    required args:
-    scatter_axis = matplotlib axes object
-
-    optional args:
-    size=75, to plot pin radius
-    pin_file="pin_array.dat"
-    '''
-    try: 
-        pin_data = di.get_data(pin_file,5,sep=" ")
-    except:
-        print("No pinning data in expected format")
-        return
-    pin_x = pin_data[1]
-    pin_y = pin_data[2]
-    pin_rad = pin_data[3]
-    pin_mag = pin_data[4]
-
-    scatter_axis.scatter(pin_x,pin_y,c="gray",alpha=0.4,s=size) #,rasterized=True)
-
-    return
-
 
 ################################################################
 ################################################################
 ################################################################
 
+    
 if __name__ == "__main__":
 
 
+    get_ascii_data = 1
     #---------------------------
     #system specific variables
     #---------------------------
     disk_size=100
 
-    Sx=[0,36.5]
-    Sy=[0,36.5]
+    Sx=[0,60.0]
+    Sy=[0,60.0]
 
-    plot_time=19000 #time to plot
+    plot_time=4500000 #time to plot
+    print(plot_time)
     #---------------------------
     #Set up a gridded figure
     #---------------------------
@@ -94,6 +69,14 @@ if __name__ == "__main__":
     
     datafile_prefix = "velocity_data/XV_data_t="
     plot_file=datafile_prefix+"%08d"%(plot_time)
+
+    print(plot_file)
+    if get_ascii_data == 0:
+        plot_file=plot_file+".npy"
+
+    if(verbose):
+        print("Reading in file: %s"%(plot_file))
+        
     particle_data = di.get_data(plot_file,7,sep=" ")
         
     id   = particle_data[0]  #NOT USED
@@ -123,7 +106,7 @@ if __name__ == "__main__":
     #---------------------------------------------------------
     #Finally plot the data
     #---------------------------------------------------------
-    plot_pins(ax1,size=disk_size)
+    cpl.plot_pins(ax1,size=disk_size)
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
 
     #------------------------------------------------------------------------
