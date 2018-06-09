@@ -22,7 +22,7 @@ plt.rc('font', size=20)
 ################################################################
 ################################################################
 def animate(i,scatter1,fileprefix,
-            force_template,force_text,get_ascii_data=1):
+            force_template,force_text,get_ascii_data):
     '''
     subroutine driven by the matplotlib animation library
 
@@ -44,7 +44,7 @@ def animate(i,scatter1,fileprefix,
                 but the object's position and settings 
                 are given in the main function 
 
-    get_ascii_data: default value 1/True
+    get_ascii_data: no default value 1/True
 
               get_ascii_data=1,
               reads ascii files (slow) AND writes binary files

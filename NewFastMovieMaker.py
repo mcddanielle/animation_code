@@ -8,7 +8,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.colors as colors
-#from matplotlib import cm
 import matplotlib.ticker as ticker
 
 import matplotlib.animation as animation
@@ -20,88 +19,6 @@ import colloid_plot_library as cpl
 plt.rc('font', size=20)
 
 
-    
-################################################################
-################################################################
-################################################################
-def animate(i,scatter1,fileprefix,
-            force_template,force_text,
-            get_ascii_data=1):
-    '''
-    subroutine driven by the matplotlib animation library
-
-    i:  integer
-        clock time of simulation, 
-        used in naming scheme for velocity files
-
-    scatter1: matplotlib plot object
-              plot containing positions of particles to be updated
-
-    fileprefix: string 
-                used to name all data files, needs i to specify file
-
-    force_template: string with integer argument
-                    is used to update the frame-by-frame label
-
-    force_text: matplotlib text object
-                the text itself is updated with every frame call
-                but the object's position and settings 
-                are given in the main function 
-
-    '''
-    
-    ############################################################
-    #get new particle positions from new integer time i
-    ############################################################
-    init_file=fileprefix+"%08d"%(i)
-    
-    if get_ascii_data:
-        #read ascii file
-        particle_data = di.get_data(init_file,7,sep=" ")
-
-    else:
-        #read binary file
-        binary_file = "%s%s"%(init_file,".npy")
-        particle_data = np.load(binary_file)        
-
-    #either way, the relevant data the particle positions
-    #we already know the particle id and its size
-    xp = particle_data[2]
-    yp = particle_data[3]
-    
-    if get_ascii_data:
-        #if we haven't save the data in binary format, do it now
-        np.save(init_file,particle_data)
-    
-    '''
-    #if you need to change the particle sizes with time
-    #for instance if your system is under compression
-    #this is the format of the array and the manner
-    #to update a size array
-    if i>1000000:
-        new_sizes = np.array([50 - i/1000000.0]*len(xp))
-        scatter1.set_sizes(new_sizes)
-    '''
-
-    #specially formatted array to update scatter plot
-    data = np.hstack((xp[:i,np.newaxis], yp[:i, np.newaxis]))
-
-    #update the scatter plot created in the main function with the new data
-    scatter1.set_offsets(data)
-    
-    #if you're changing the color
-    #color_array = np.array(something)
-    #scatter1.set_array(color_array)
-
-    #update the text label for the new time
-    force_text.set_text(force_template%(i))
-
-    #print current time to user 
-    print(i)
-    
-    return scatter1,
-
-
 
 ################################################################
 ################################################################
@@ -111,9 +28,23 @@ if __name__ == "__main__":
 
     get_ascii_data = 1
 
+    #------------------------------------------------------------------------
+    #get data for initial frame, 
+    #------------------------------------------------------------------------
+    Sx=[0,60.0]
+    Sy=[0,60.0]
+    dt=0.002
 
     disk_size=100
     radius_ratio=2.0
+
+    starttime=0 
+    time_inc=1000   #increment to count by
+    maxtime=starttime + 98000 #18000 #9900 #maximum frame to read
+
+    datafile_prefix = "velocity_data/XV_data_t="
+    init_file=datafile_prefix+"%08d"%(starttime)
+    
     #---------------------------
     #Create a grid figure -
     #overkill for this, but useful for including more data
@@ -128,16 +59,6 @@ if __name__ == "__main__":
 
     cpl.plot_pins(ax1,size=disk_size)
 
-
-    #------------------------------------------------------------------------
-    #get data for initial frame, 
-    #------------------------------------------------------------------------
-    Sx=[0,60.0]
-    Sy=[0,60.0]
-    dt=0.002
-
-    datafile_prefix = "velocity_data/XV_data_t="
-
     ax1.set_xlabel("x")
     ax1.set_ylabel("y")
     ax1.set_ylim(0,Sy[1])
@@ -145,14 +66,6 @@ if __name__ == "__main__":
     num_ticks=6
     ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
-
-  
-    starttime=0 
-    
-
-    time_inc=1000   #increment to count by
-    maxtime=starttime + 98000 #18000 #9900 #maximum frame to read     
-    init_file=datafile_prefix+"%08d"%(starttime)
 
     if get_ascii_data:    
         particle_data = di.get_data(init_file,7,sep=" ")
@@ -201,15 +114,16 @@ if __name__ == "__main__":
     #finally animate everything
     #------------------------------------------------------------------------   
 
-    
     ani = animation.FuncAnimation(fig, 
-                                   animate, range(starttime,maxtime,time_inc), 
-                                   fargs=(scatter1,
-                                          datafile_prefix,
-                                          force_template,
-                                          force_text,
-                                          get_ascii_data=get_ascii_data),
-                                   interval=20, blit=False)
+                                  cpl.animate,
+                                  range(starttime,maxtime,time_inc), 
+                                  fargs=(scatter1,
+                                         datafile_prefix,
+                                         force_template,
+                                         force_text,
+                                         get_ascii_data),
+
+                                  interval=20, blit=False)
 
     #following should resize system and pad, but with 1x1 grid
     #causes function to error
