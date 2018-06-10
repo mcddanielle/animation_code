@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 A simple example of an animated plot
 SOURCE: http://matplotlib.org/examples/animation/simple_anim.html
@@ -11,13 +13,13 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 
 import matplotlib.animation as animation
+import sys
 
 #functions written by D.M. to get and plot specific data files
 import data_importerDM as di
 import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
-
 
 
 ################################################################
@@ -67,35 +69,45 @@ if __name__ == "__main__":
     ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
 
-    if get_ascii_data:    
-        particle_data = di.get_data(init_file,7,sep=" ")
-    else:
-        binary_file = "%s%s"%(init_file,".npy")
-        particle_data = np.load(binary_file)
+    if 1:
         
-    id   = particle_data[0]  #NOT USED
-    type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
-    xp   = particle_data[2]  #DYMAMICALLY UPDATED POSITIONS
-    yp   = particle_data[3]
+        #fp = file(infile, 'rb')
 
-    #DON'T BOTHER WITH THESE PARAMETERS
-    #vx    = particle_data[4]
-    #vy    = particle_data[5]
-    #speed = particle_data[6]
+        id,xp,yp = di.read_smtest(0) #,fp)
+        size = disk_size * np.ones(len(id))
+        type = np.ones(len(id))        
 
-    if get_ascii_data:
-        np.save(init_file,particle_data)
-
-    #RESIZE PARTICLES BASED ON TYPE    
-    #not efficient - python can do this much faster
-    #than this c-like array
-    #since we only do this once, that is fine.  multiple times?  fix!
-    size  = np.zeros(len(type))
-    for k in range(len(type)):
-        if type[k]==1:
-            size[k]=disk_size
+        
+    if 0:
+        if get_ascii_data:    
+            particle_data = di.get_data(init_file,7,sep=" ")
         else:
-            size[k]=disk_size*(radius_ratio**2) #size = scale*radius^2, i.e. area, not radius
+            binary_file = "%s%s"%(init_file,".npy")
+            particle_data = np.load(binary_file)
+        
+        id   = particle_data[0]  #NOT USED
+        type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
+        xp   = particle_data[2]  #DYMAMICALLY UPDATED POSITIONS
+        yp   = particle_data[3]
+
+        #DON'T BOTHER WITH THESE PARAMETERS
+        #vx    = particle_data[4]
+        #vy    = particle_data[5]
+        #speed = particle_data[6]
+
+        if get_ascii_data:
+            np.save(init_file,particle_data)
+
+        #RESIZE PARTICLES BASED ON TYPE    
+        #not efficient - python can do this much faster
+        #than this c-like array
+        #since we only do this once, that is fine.  multiple times?  fix!
+        size  = np.zeros(len(type))
+        for k in range(len(type)):
+            if type[k]==1:
+                size[k]=disk_size
+            else:
+                size[k]=disk_size*(radius_ratio**2) #size = scale*radius^2, i.e. area, not radius
             
 
     #make a two color map 
@@ -125,6 +137,9 @@ if __name__ == "__main__":
 
                                   interval=20, blit=False)
 
+    #close smtest
+    #
+    
     #following should resize system and pad, but with 1x1 grid
     #causes function to error
     #plt.tight_layout(h_pad=-0.5,w_pad=1.0,pad=0.5)
@@ -142,5 +157,5 @@ if __name__ == "__main__":
     else:
         #live animation for testing
         plt.show()
-        
+
     exit()

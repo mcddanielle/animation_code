@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Make a png/pdf of a single frame.
 """

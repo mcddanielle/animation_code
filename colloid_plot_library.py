@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+
 """
 A simple example of an animated plot
 SOURCE: http://matplotlib.org/examples/animation/simple_anim.html
 #to make a gif:
 https://eli.thegreenplace.net/2016/drawing-animated-gifs-with-matplotlib/
 """
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -11,6 +14,8 @@ import matplotlib.colors as colors
 import matplotlib.ticker as ticker
 
 import matplotlib.animation as animation
+
+import sys
 
 #functions written by D.M. to get and plot specific data files
 import data_importerDM as di
@@ -56,29 +61,34 @@ def animate(i,scatter1,fileprefix,
               also sits in the ascii file
 
     '''
-    
-    ############################################################
-    #get new particle positions from new integer time i
-    ############################################################
-    init_file=fileprefix+"%08d"%(i)
-    
-    if get_ascii_data:
-        #read ascii file
-        particle_data = di.get_data(init_file,7,sep=" ")
 
-    else:
-        #read binary file
-        binary_file = "%s%s"%(init_file,".npy")
-        particle_data = np.load(binary_file)        
-
-    #either way, the relevant data the particle positions
-    #we already know the particle id and its size
-    xp = particle_data[2]
-    yp = particle_data[3]
+    if 1:
+        print(i)
+        id,xp,yp = di.read_smtest(i)
+        sys.exit()
+    if 0:
+        ############################################################
+        #get new particle positions from new integer time i
+        ############################################################
+        init_file=fileprefix+"%08d"%(i)
     
-    if get_ascii_data:
-        #if we haven't save the data in binary format, do it now
-        np.save(init_file,particle_data)
+        if get_ascii_data:
+            #read ascii file
+            particle_data = di.get_data(init_file,7,sep=" ")
+
+        else:
+            #read binary file
+            binary_file = "%s%s"%(init_file,".npy")
+            particle_data = np.load(binary_file)        
+
+        #either way, the relevant data the particle positions
+        #we already know the particle id and its size
+        xp = particle_data[2]
+        yp = particle_data[3]
+    
+        if get_ascii_data:
+            #if we haven't save the data in binary format, do it now
+            np.save(init_file,particle_data)
     
     '''
     #if you need to change the particle sizes with time
@@ -190,50 +200,55 @@ if __name__ == "__main__":
     #----------------------------------------------
     plot_pins(ax1,size=disk_size)
 
-    #----------------------------------------------
-    #get data for initial frame, 
-    #----------------------------------------------
-    datafile_prefix = "velocity_data/XV_data_t="
+    id,xp,yp = di.read_smtest(0) #,fp)
+    size = disk_size * np.ones(len(id))
+    type = np.ones(len(id))
 
-    if plot_type == "movie":
-        init_file=datafile_prefix+"%08d"%(starttime)
-    elif plot_type == "image":
-        init_file=datafile_prefix+"%08d"%(plot_time)
+    if 0:
+        #----------------------------------------------
+        #get data for initial frame, 
+        #----------------------------------------------
+        datafile_prefix = "velocity_data/XV_data_t="
 
-    try:
-        if get_ascii_data:    
-            particle_data = di.get_data(init_file,7,sep=" ")
-        else:
-            binary_file = "%s%s"%(init_file,".npy")
-            particle_data = np.load(binary_file)
-    except:
-        print("The file %s does not exist",init_file)
+        if plot_type == "movie":
+            init_file=datafile_prefix+"%08d"%(starttime)
+        elif plot_type == "image":
+            init_file=datafile_prefix+"%08d"%(plot_time)
+
+        try:
+            if get_ascii_data:    
+                particle_data = di.get_data(init_file,7,sep=" ")
+            else:
+                binary_file = "%s%s"%(init_file,".npy")
+                particle_data = np.load(binary_file)
+        except:
+            print("The file %s does not exist",init_file)
         
-    id   = particle_data[0]  #NOT USED
-    type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
-    xp   = particle_data[2]  #DYNAMICALLY UPDATED POSITIONS
-    yp   = particle_data[3]
+        id   = particle_data[0]  #NOT USED
+        type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
+        xp   = particle_data[2]  #DYNAMICALLY UPDATED POSITIONS
+        yp   = particle_data[3]
 
-    #DON'T BOTHER WITH THESE PARAMETERS
-    #vx    = particle_data[4]
-    #vy    = particle_data[5]
-    #speed = particle_data[6]
+        #DON'T BOTHER WITH THESE PARAMETERS
+        #vx    = particle_data[4]
+        #vy    = particle_data[5]
+        #speed = particle_data[6]
 
-    #save the data so subsequent movie making for same data is faster
-    if get_ascii_data:
-        np.save(init_file,particle_data)
+        #save the data so subsequent movie making for same data is faster
+        if get_ascii_data:
+            np.save(init_file,particle_data)
 
-    #RESIZE PARTICLES BASED ON TYPE    
-    #not efficient - python can do this much faster
-    #than this c-like array
-    #since we only do this once, that is fine.  multiple times?  fix!
-    size  = np.zeros(len(type))
-    for k in range(len(type)):
-        if type[k]==1:
-            size[k]=disk_size
-        else:
-            size[k]=disk_size*(radius_ratio**2)
-            #size = scale*radius^2, i.e. area, not radius
+        #RESIZE PARTICLES BASED ON TYPE    
+        #not efficient - python can do this much faster
+        #than this c-like array
+        #since we only do this once, that is fine.  multiple times?  fix!
+        size  = np.zeros(len(type))
+        for k in range(len(type)):
+            if type[k]==1:
+                size[k]=disk_size
+            else:
+                size[k]=disk_size*(radius_ratio**2)
+                #size = scale*radius^2, i.e. area, not radius
             
 
     #make a two color map 
@@ -264,9 +279,8 @@ if __name__ == "__main__":
                                       fargs=(scatter1,
                                              datafile_prefix,
                                              force_template,
-                                             force_text),
-                                      interval=20, blit=False,
-                                      get_ascii_data = get_ascii_data)
+                                             force_text,get_ascii_data),
+                                      interval=20, blit=False)
 
 
         #name of the movie file
