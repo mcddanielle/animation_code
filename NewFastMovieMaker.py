@@ -70,12 +70,12 @@ if __name__ == "__main__":
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
 
     if 1:
-        
-        #fp = file(infile, 'rb')
 
-        id,xp,yp = di.read_smtest(0) #,fp)
-        size = disk_size * np.ones(len(id))
-        type = np.ones(len(id))        
+        di.read_smtest()
+        datafile_prefix = "velocity_data/smtest_"
+        init_file=datafile_prefix+"%08d"%(starttime)
+        binary_file = "%s%s"%(init_file,".npy")
+        particle_data = np.load(binary_file)            
 
         
     if 0:
@@ -85,47 +85,51 @@ if __name__ == "__main__":
             binary_file = "%s%s"%(init_file,".npy")
             particle_data = np.load(binary_file)
         
-        id   = particle_data[0]  #NOT USED
-        type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
-        xp   = particle_data[2]  #DYMAMICALLY UPDATED POSITIONS
-        yp   = particle_data[3]
+    id   = particle_data[0]  #NOT USED
+    type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
+    xp   = particle_data[2]  #DYMAMICALLY UPDATED POSITIONS
+    yp   = particle_data[3]
 
-        #DON'T BOTHER WITH THESE PARAMETERS
-        #vx    = particle_data[4]
-        #vy    = particle_data[5]
-        #speed = particle_data[6]
+    size = disk_size*np.ones(len(type))
+    
+    #DON'T BOTHER WITH THESE PARAMETERS
+    #vx    = particle_data[4]
+    #vy    = particle_data[5]
+            #speed = particle_data[6]
 
-        if get_ascii_data:
-            np.save(init_file,particle_data)
+    if get_ascii_data:
+        np.save(init_file,particle_data)
 
-        #RESIZE PARTICLES BASED ON TYPE    
-        #not efficient - python can do this much faster
-        #than this c-like array
-        #since we only do this once, that is fine.  multiple times?  fix!
-        size  = np.zeros(len(type))
-        for k in range(len(type)):
-            if type[k]==1:
-                size[k]=disk_size
-            else:
-                size[k]=disk_size*(radius_ratio**2) #size = scale*radius^2, i.e. area, not radius
-            
+    #RESIZE PARTICLES BASED ON TYPE    
+    #not efficient - python can do this much faster
+    #than this c-like array
+    #since we only do this once, that is fine.
+    #multiple times?  fix!
 
+    '''
+    for k in range(len(type)):
+    if type[k]==1:
+        size[k]=disk_size
+    else:
+        size[k]=disk_size*(radius_ratio**2)
+    '''        
+    
     #make a two color map 
     mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
     
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
 
-    #------------------------------------------------------------------------
+    #---------------------------------------------------------------
     #add an annotation
     #note: "force" was for a different system, here time is relevant
-    #------------------------------------------------------------------------
+    #-------------------------------------------------------------
     force_template = r'time = %d'
     force_text = ax1.text(0.4, 1.01, '', transform=ax1.transAxes)
-
-    #------------------------------------------------------------------------
+            
+    #-----------------------------------------------------------------
     #finally animate everything
-    #------------------------------------------------------------------------   
-
+    #-----------------------------------------------------------------   
+    
     ani = animation.FuncAnimation(fig, 
                                   cpl.animate,
                                   range(starttime,maxtime,time_inc), 
@@ -134,12 +138,10 @@ if __name__ == "__main__":
                                          force_template,
                                          force_text,
                                          get_ascii_data),
-
                                   interval=20, blit=False)
 
-    #close smtest
-    #
-    
+
+        
     #following should resize system and pad, but with 1x1 grid
     #causes function to error
     #plt.tight_layout(h_pad=-0.5,w_pad=1.0,pad=0.5)
@@ -158,4 +160,4 @@ if __name__ == "__main__":
         #live animation for testing
         plt.show()
 
-    exit()
+    sys.exit()

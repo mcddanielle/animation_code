@@ -60,12 +60,15 @@ def animate(i,scatter1,fileprefix,
               which contain numpy arrays of the data that 
               also sits in the ascii file
 
+    fp: file pointer
+    nV: number vorticles
     '''
 
     if 1:
-        print(i)
-        id,xp,yp = di.read_smtest(i)
-        sys.exit()
+        datafile_prefix = "velocity_data/smtest_"
+        init_file=datafile_prefix+"%08d"%(i)
+        binary_file = "%s%s"%(init_file,".npy")
+        particle_data = np.load(binary_file) 
     if 0:
         ############################################################
         #get new particle positions from new integer time i
@@ -81,14 +84,14 @@ def animate(i,scatter1,fileprefix,
             binary_file = "%s%s"%(init_file,".npy")
             particle_data = np.load(binary_file)        
 
-        #either way, the relevant data the particle positions
-        #we already know the particle id and its size
-        xp = particle_data[2]
-        yp = particle_data[3]
+    #either way, the relevant data the particle positions
+    #we already know the particle id and its size
+    xp = particle_data[2]
+    yp = particle_data[3]
     
-        if get_ascii_data:
-            #if we haven't save the data in binary format, do it now
-            np.save(init_file,particle_data)
+    if 0: #get_ascii_data:
+        #if we haven't save the data in binary format, do it now
+        np.save(init_file,particle_data)
     
     '''
     #if you need to change the particle sizes with time
@@ -200,7 +203,7 @@ if __name__ == "__main__":
     #----------------------------------------------
     plot_pins(ax1,size=disk_size)
 
-    id,xp,yp = di.read_smtest(0) #,fp)
+    id,xp,yp,fln = di.read_smtest(0) #,fp)
     size = disk_size * np.ones(len(id))
     type = np.ones(len(id))
 
