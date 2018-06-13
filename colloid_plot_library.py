@@ -25,7 +25,8 @@ plt.rc('font', size=20)
 
 ################################################################
 def get_and_parse_data(data_type,starttime,
-                       datafile_prefix = "velocity_data/XV_data_t="):
+                       datafile_prefix = "velocity_data/XV_data_t=",
+                       movie_type="smovie"):
     '''Guide to data types
 
     0: "smtest"      
@@ -47,7 +48,7 @@ def get_and_parse_data(data_type,starttime,
 
         #make a series of binary files in subroutine,
         #only call once 
-        di.read_smtest()
+        di.read_smtest(movie_type=movie_type)
         binary_file = "%s%s"%(init_file,".npy")
         particle_data = np.load(binary_file)            
         

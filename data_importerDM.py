@@ -48,6 +48,7 @@ def read_smtest(infile='smtest', movie_type="smovie"):
             type = np.ones(nV,dtype=np.int32)
             x_array = np.empty(nV,dtype=np.float32)
             y_array = np.empty(nV,dtype=np.float32)
+            r_array = np.empty(nV,dtype=np.float32)  #radius
 
             #for cmovie you also need these
             #size = disk_size * np.ones(len(id))
@@ -56,23 +57,36 @@ def read_smtest(infile='smtest', movie_type="smovie"):
             if movie_type == "smovie":
                 dtype = np.dtype("i4, (2)f4")
         
-            #elif movie_type == "cmovie":
-            #    dtype = np.dtype("(2)i4, (2)f4")
+            elif movie_type == "cmovie":
+                dtype = np.dtype("(2)i4, (3)f4")
             #    type  = np.fromfile(fp, np.int32, 1)[0]
             
             for n in range(nV):        # loop through all particles
 
+                #i,x,y    = np.fromfile(fp, dtype, 1) #doesn't work
+                data1 = np.fromfile(fp, dtype, 1)
+                
                 if movie_type == "smovie":
                 
-                    #i,x,y    = np.fromfile(fp, dtype, 1) #doesn't work
-                    data1 = np.fromfile(fp, dtype, 1)
-                    print(data1)
                     try:
                         id[n] = data1[0][0]
                         x_array[n] = data1[0][1][0]
                         y_array[n] = data1[0][1][1]
                     except:
+                        print(data1)
                         print(n)
+
+                elif  movie_type == "cmovie":
+                    
+                    try:
+                        type[n] = data1[0][0][0]
+                        id[n] = data1[0][0][1]
+                        x_array[n] = data1[0][1][0]
+                        y_array[n] = data1[0][1][1]
+                        r_array[n] = data1[0][1][2]
+                    except:
+                        print(data1)
+                        print(n)                    
 
             save_file=datafile_prefix+"%08d"%(time)
 
