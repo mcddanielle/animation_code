@@ -8,19 +8,18 @@ https://eli.thegreenplace.net/2016/drawing-animated-gifs-with-matplotlib/
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 import matplotlib.colors as colors
-import matplotlib.ticker as ticker
+#import matplotlib.gridspec as gridspec
+#import matplotlib.ticker as ticker
 
 import matplotlib.animation as animation
 import sys
 
 #functions written by D.M. to get and plot specific data files
-import data_importerDM as di
+#import data_importerDM as di
 import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
-
 
 ################################################################
 ################################################################
@@ -28,91 +27,46 @@ plt.rc('font', size=20)
 
 if __name__ == "__main__":
 
-    get_ascii_data = 1
+    #all possibilities
+    data_types = [0,1,2] #["smtest", "ascii", "binary"]
+
+    #the one we will use
+    data_type = data_types[0]
 
     #------------------------------------------------------------------------
     #get data for initial frame, 
     #------------------------------------------------------------------------
-    Sx=[0,60.0]
-    Sy=[0,60.0]
+    Sx=[0,36.5]
+    Sy=[0,36.5]
     dt=0.002
 
     disk_size=100
-    radius_ratio=2.0
 
     starttime=0 
     time_inc=1000   #increment to count by
-    maxtime=starttime + 98000 #18000 #9900 #maximum frame to read
-
-    datafile_prefix = "velocity_data/XV_data_t="
-    init_file=datafile_prefix+"%08d"%(starttime)
+    maxtime=starttime + 198000
+    #6000 #3999000 #98000 #18000 #9900 #maximum frame to read
     
     #---------------------------
-    #Create a grid figure -
-    #overkill for this, but useful for including more data
+    #set up a 1x1 plot in a subroutine
     #---------------------------
-    rows=1
-    columns=1
+    fig,ax1 = cpl.format_plot(Sx=Sx,Sy=Sy)
 
-    gs=gridspec.GridSpec(rows,columns)
-    fig = plt.figure(figsize=(10*columns,10*rows))
-
-    ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
-
+    #---------------------------
+    #plot the pinning array
+    #---------------------------
     cpl.plot_pins(ax1,size=disk_size)
 
-    ax1.set_xlabel("x")
-    ax1.set_ylabel("y")
-    ax1.set_ylim(0,Sy[1])
-    ax1.set_xlim(0,Sx[1])
-    num_ticks=6
-    ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
-    ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
-
-    if 1:
-
-        di.read_smtest()
-        datafile_prefix = "velocity_data/smtest_"
-        init_file=datafile_prefix+"%08d"%(starttime)
-        binary_file = "%s%s"%(init_file,".npy")
-        particle_data = np.load(binary_file)            
-
-        
-    if 0:
-        if get_ascii_data:    
-            particle_data = di.get_data(init_file,7,sep=" ")
-        else:
-            binary_file = "%s%s"%(init_file,".npy")
-            particle_data = np.load(binary_file)
-        
-    id   = particle_data[0]  #NOT USED
-    type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
-    xp   = particle_data[2]  #DYMAMICALLY UPDATED POSITIONS
-    yp   = particle_data[3]
-
+    #---------------------------
+    #get and parse data
+    #---------------------------
+    datafile_prefix = "velocity_data/XV_data_t="
+    id,type,xp,yp = cpl.get_and_parse_data(data_type,starttime)
     size = disk_size*np.ones(len(type))
-    
-    #DON'T BOTHER WITH THESE PARAMETERS
-    #vx    = particle_data[4]
-    #vy    = particle_data[5]
-            #speed = particle_data[6]
 
-    if get_ascii_data:
-        np.save(init_file,particle_data)
-
-    #RESIZE PARTICLES BASED ON TYPE    
-    #not efficient - python can do this much faster
-    #than this c-like array
-    #since we only do this once, that is fine.
-    #multiple times?  fix!
-
-    '''
-    for k in range(len(type)):
-    if type[k]==1:
-        size[k]=disk_size
-    else:
-        size[k]=disk_size*(radius_ratio**2)
-    '''        
+    #----------------------------------------------
+    #plot the particles
+    #----------------------------------------------
     
     #make a two color map 
     mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
@@ -137,9 +91,8 @@ if __name__ == "__main__":
                                          datafile_prefix,
                                          force_template,
                                          force_text,
-                                         get_ascii_data),
+                                         data_type),
                                   interval=20, blit=False)
-
 
         
     #following should resize system and pad, but with 1x1 grid
@@ -161,3 +114,21 @@ if __name__ == "__main__":
         plt.show()
 
     sys.exit()
+
+    #####################################################################
+    #####################################################################
+    #RESIZE PARTICLES BASED ON TYPE    
+    #not efficient - python can do this much faster
+    #than this c-like array
+    #since we only do this once, that is fine.
+    #multiple times?  fix!
+
+    '''
+    radius_ratio=2.0
+
+    for k in range(len(type)):
+    if type[k]==1:
+        size[k]=disk_size
+    else:
+        size[k]=disk_size*(radius_ratio**2)
+    ''' 

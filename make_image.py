@@ -31,7 +31,7 @@ plt.rc('font', size=20)
     
 if __name__ == "__main__":
 
-
+    verbose = 1
     get_ascii_data = 1
     #---------------------------
     #system specific variables
@@ -43,32 +43,15 @@ if __name__ == "__main__":
 
     plot_time=4500000 #time to plot
     print(plot_time)
+
     #---------------------------
-    #Set up a gridded figure
+    #set up a 1x1 plot in a subroutine
     #---------------------------
-    rows=1
-    columns=1
-
-    gs=gridspec.GridSpec(rows,columns)
-    fig = plt.figure(figsize=(6*columns,6*rows))
-
-    ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
-
-    #---------------------------------
-    #add labels and axes ticks
-    #-----------------------------------
-    ax1.set_xlabel("x")
-    ax1.set_ylabel("y")
-    ax1.set_ylim(0,Sy[1])
-    ax1.set_xlim(0,Sx[1])
-    num_ticks=6
-    ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
-    ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
+    fig,ax1 = cpl.format_plot()
 
     #------------------------------------------------------------------------
     #get data for initial frame, 
-    #------------------------------------------------------------------------
-    
+    #------------------------------------------------------------------------   
     datafile_prefix = "velocity_data/XV_data_t="
     plot_file=datafile_prefix+"%08d"%(plot_time)
 

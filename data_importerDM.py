@@ -30,8 +30,8 @@ def read_smtest(infile='smtest', movie_type="smovie"):
     # open the file, r= for reading, b=binary file
     #fp = file(infile, 'rb')  #doesn't account for failure
 
-    datafile_prefix = "velocity_data/smtest_"
-    
+    datafile_prefix = "velocity_data/XV_data_t="    
+
     with open(infile, 'rb') as fp:
     
         fp.seek(0, 2)  # Seek the end
@@ -65,11 +65,14 @@ def read_smtest(infile='smtest', movie_type="smovie"):
                 if movie_type == "smovie":
                 
                     #i,x,y    = np.fromfile(fp, dtype, 1) #doesn't work
-                    data1 = np.fromfile(fp, dtype, 1) 
-                    id[n] = data1[0][0]
-                    x_array[n] = data1[0][1][0]
-                    y_array[n] = data1[0][1][1]
-
+                    data1 = np.fromfile(fp, dtype, 1)
+                    print(data1)
+                    try:
+                        id[n] = data1[0][0]
+                        x_array[n] = data1[0][1][0]
+                        y_array[n] = data1[0][1][1]
+                    except:
+                        print(n)
 
             save_file=datafile_prefix+"%08d"%(time)
 
