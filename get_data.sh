@@ -1,4 +1,4 @@
-#!/user/bin/bash
+#!/usr/bin/bash
 
 #script is intended to loop through outputs of MD codes
 #and separate all of the time separated data into particle separated data

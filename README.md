@@ -45,6 +45,10 @@ For D.M.'s projects
 ### get_data.sh
 Translates time separated data (stored in velocity_data/XV...) into particle separated data (stored in position_data/id00_XV...)
 
+To run, be in directory with `velocity_data` and run
+
+`~/Codes/animation_code/get_data.sh`
+
 ------------------------------------------------------------------------
 OLD:
 ------------------------------------------------------------------------
