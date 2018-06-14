@@ -1,10 +1,58 @@
-To run this on a data set:
+6/14/2018
 
-''' $ python NewFastMovieMaker.py '''
+## Getting started
+
+Each python/bash code now has an identifier at the top of the code that reads
+
+`#!/usr/bin/python`
+or 
+`#!/usr/bin/bash`
+
+you may make these executable files by typing the following in a terminal
+
+`$ chmod u+x *py *sh`
+
+then you can either run the usual way:
+
+`$ python channel_colloid_movie_maker.py`
 
 or
 
-'''$ python make_image.py '''
+`$ ~/Codes/animation_codes/channel_colloid_movie_maker.py`
+
+## Files
+### active_movie_maker.py
+For Adrian's project.  Expects to find Pa0 and a "cmovie" format
+(i.e. the binary file has the type and radius)
+
+### channel_colloid_movie_maker.py
+For Tiare's project.  Expects to find Pcw0 and a "smovie" format
+(i.e. the binary file just has id, x, y)
+
+### colloid_plot_library.py
+Collection of plotting subroutines called by all movie_maker codes
+
+### data_importerDM.py
+Collection of data reading subroutines, both binary and ascii.
+The ascii could be made faster using np.loadtxt()
+
+### make_image.py
+Not fully updated - but uses colloid_plot_library.py as does the movie codes
+
+### movie_maker.py
+For D.M.'s projects
+
+
+------------------------------------------------------------------------
+OLD:
+------------------------------------------------------------------------
+To run this on a data set:
+
+` $ python NewFastMovieMaker.py `
+
+or
+
+`$ python make_image.py `
 
 * data should be in a file resembling "velocity_data/XV_data_t="
 * for either code, you can play with the colors or particle sizes and other options by digging around the source code.
