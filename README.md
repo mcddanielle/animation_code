@@ -14,11 +14,11 @@ you may make these executable files by typing the following in a terminal
 
 then you can either run the usual way:
 
-`$ python channel_colloid_movie_maker.py`
+`$ python ~/Codes/animation_code/channel_colloid_movie_maker.py`
 
 or now that you've set these as executables, you don't need to tell the terminal what kind of code you're running
 
-`$ ~/Codes/animation_codes/channel_colloid_movie_maker.py`
+`$ ~/Codes/animation_code/channel_colloid_movie_maker.py`
 
 ## Files
 ### active_movie_maker.py
