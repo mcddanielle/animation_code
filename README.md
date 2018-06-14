@@ -42,6 +42,8 @@ Not fully updated - but uses colloid_plot_library.py as does the movie codes
 ### movie_maker.py
 For D.M.'s projects
 
+### get_data.sh
+Translates time separated data (stored in velocity_data/XV...) into particle separated data (stored in position_data/id00_XV...)
 
 ------------------------------------------------------------------------
 OLD:
