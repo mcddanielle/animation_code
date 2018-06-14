@@ -31,7 +31,7 @@ if __name__ == "__main__":
     data_types = [0,1,2] #["smtest", "ascii", "binary"]
 
     #the one we will use
-    data_type = data_types[0]
+    data_type = data_types[1]
 
     if data_type == 0:
         print("Reading directly from smtest (binary)")
@@ -54,9 +54,12 @@ if __name__ == "__main__":
     #Sy=[0,36.5]
     #dt=0.002
 
-    disk_size=100  #hard coded by what "looks good"
+    disk_size=50  #hard coded by what "looks good"
 
-    starttime=0 
+    if data_type == 1:
+        starttime=writemovietime
+    else:
+        starttime=0 
     time_inc=writemovietime
     maxtime=maxtime - time_inc
     
