@@ -16,7 +16,7 @@ then you can either run the usual way:
 
 `$ python channel_colloid_movie_maker.py`
 
-or
+or now that you've set these as executables, you don't need to tell the terminal what kind of code you're running
 
 `$ ~/Codes/animation_codes/channel_colloid_movie_maker.py`
 
