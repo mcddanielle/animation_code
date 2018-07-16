@@ -118,12 +118,16 @@ def histogram_velocities(ax,time,filename=None,path=""):
 ################################################################
 def make_trails(ax,tf,delta_t=500,N=256,path1='',
                 SX=36.0,SY=36.0,size=100,line=2,
-                edgecolor='gray',facecolor='black',edgewidth=1.0,
+                edgewidth=1.0,
                 hardcode_figure=None,num_troughs=24.0):
 
     '''not called by the main function, 
     but now this is more adaptable for calling from 
     other functions... work on this
+    trails are hardcoded to be black (edgecolor) 
+    and the "facecolor" must be none 
+    since the patch object can be "filled in" as a 2D area
+    and that is NOT nice looking
 
     modern version of the turtle - what do draw and where
 
@@ -141,15 +145,18 @@ def make_trails(ax,tf,delta_t=500,N=256,path1='',
     N:       number of particles in the simulation
 
     optional arguments
+    path1="" place to find the data files
     SX = 36.0 system size in x
     SY = 36.0 system size in y
     size = 100 - disk size scaling
     line = 2 - width of trails to draw
-    edgecolor = "gray"  - color of disk
-    facecolor = "black" - color of trail line
-    edgewidth = ?
-    hardcode_figure = 1,11,etc - for the ratchet paper
-    num_troughs = 24 - written for ratchet paper - unnecessary
+
+
+    seems weird, but we aren't filling anything in for a patch - 
+    which can be more than just a line
+
+    hardcode_figure = 1,11,etc - for the ratchet paper (UPDATE)
+
     '''
 
     #vertices - where to draw things
@@ -171,41 +178,37 @@ def make_trails(ax,tf,delta_t=500,N=256,path1='',
     #array containing all starting positions of particles
     x0=None
 
-    #loop through (hardcoded) 6 files
+    #loop through (hardcoded) 6 files  -fix this!
     #grab the data slightly differently depending on which version
     #of the code wrote the data files
     for time in range(t0,tf,delta_t):
 
-        if hardcode_figure==1:
-            filename ="velocity_data/XV_data_t=%05d"%(time)
-            data_list = di.get_data(filename,7,sep=' ',path1=path1)
-            n=2
-        else:
-            filename = "frame_data/velocity_frame%d"%(time)
-            data_list = di.get_data(filename,6,sep=' ',path1=path1)
-            n=1
+        ############################################################
+        #get new particle positions from new integer time i
+        ############################################################
+        fileprefix="velocity_data/XV_data_t="
+        init_file=fileprefix+"%08d"%(time)
 
-        x_p = data_list[n]
-        y_p = data_list[n+1]
-        v_x = data_list[n+2]
-        v_y = data_list[n+3]
-        speed   = data_list[n+4]
+        if data_type == 0 or data_type == 2:
+            binary_file = "%s%s"%(init_file,".npy")
+            particle_data = np.load(binary_file)
+        
+        elif data_type == 1:    
+            particle_data = di.get_data(init_file,7,sep=" ")
+        
+            #presumably we haven't save the data in binary format,
+            #so do it now
+            np.save(init_file,particle_data)
+        
+        #either way, we just need the particle positions
+        #at this timestep
+        
+        x_p = particle_data[2]
+        y_p = particle_data[3]    
 
         if x0==None:
             x0=x_p #initial positions
 
-        ########################################################
-        #if called, center everybody (assuming 1/4 system shift)
-        ########################################################
-        if 0:
-            x_p=np.add(x_p,36.5/4.0)
-
-
-        #if you shift, check periodic boundary conditions 
-        if 0:
-            for q in range(len(x_p)):
-                if x_p[q] > 36.5:
-                    x_p[q]-=36.5
 
         ########################################################
         #loop through each particle separately
@@ -258,9 +261,9 @@ def make_trails(ax,tf,delta_t=500,N=256,path1='',
                 codes[i].append(Path.END)
 
     #now that we've collected all the data, plot it
-    #hardcoded
-    sysSX=36.0
-    sysSY=36.0
+    #hardcoded - assuming zooming happened in last plots
+    sysSX=60 #36.0
+    sysSY=60 #36.0
     
     for i in range(N):
 
@@ -285,12 +288,36 @@ def make_trails(ax,tf,delta_t=500,N=256,path1='',
         #which is misleading, but avoids a messy figure
         if distance > 0.25:
             path = Path(verts[i], codes[i])
-            patch = patches.PathPatch(path, facecolor='none', edgecolor='black', lw=line,antialiased=True)
+            patch = patches.PathPatch(path,
+                                      facecolor='none',
+                                      edgecolor='black',
+                                      lw=line,
+                                      antialiased=True)
             #,rasterized=True)
 
             #this is where the trails get added to the figure
             ax.add_patch(patch)
 
+    return
+
+
+def plot_particles_ratchet(ax,tf,delta_t=500,N=256,path1='',
+                SX=36.0,SY=36.0,size=100,line=2,
+                edgecolor='gray',facecolor='black',edgewidth=1.0,
+                hardcode_figure=None,num_troughs=24.0):
+    '''
+    colored by forward/backward, perhaps useful for your project
+    not updated - use at own risk
+
+    optional arguments
+    edgewidth = line around disks
+    facecolor = "black" - particle color - 
+                          I ended up with gray in the manuscript
+
+    edgecolor = "gray"  - color of particle edge - 
+
+    num_troughs = 24 - written for ratchet paper 
+    '''
     #now we plot the particles 
     #get the data AGAIN!  slow!
     if hardcode_figure==1:
@@ -354,51 +381,82 @@ def make_trails(ax,tf,delta_t=500,N=256,path1='',
 
 if __name__ == "__main__":
 
+    #all possibilities
+    data_types = [0,1,2] #["smtest", "ascii", "binary"]
+
+    #the one we will use
+    data_type = data_types[0]
+
+    if data_type == 0:
+        print("Reading directly from smtest (binary)")
+        print("Writing velocity_data/XV*npy files")
+    elif data_type == 1:
+        print("Reading from velocity_data/XV* files (ascii)")
+        print("Writing velocity_data/XV*npy files")
+    elif data_type == 2:
+        print("Reading velocity_data/XV*npy files (binary)")
+
+    #--------------------------------------------------------------
+    #get data for initial frame, 
+    #---------------------------------------------------------------
+    inputfile = "Pa0"
+    
+    (Sx, Sy, radius, maxtime, writemovietime ) = cpl.get_input_data(inputfile)
+
+    #hardcode for now...
+    #get from data arrays read by smtest!
+    N_disks = 2750
+    disk_size=30    #hard coded by what "looks good"
+    
     #assume square system size
-    Sy = [0.0, 36.0]
-    Sx = [0.0, 36.0]
+    #Sy = [0.0, 60.0]
+    #Sx = [0.0, 60.0]
 
     SX = (Sx[1]-Sx[0])
     SY = (Sy[1]-Sy[0])
 
-    #set rows and columns
-    columns = 1
-    rows = 1
+    #size=5  #hard coded by what "looks good" check that number?
+
+    #---------------------------
+    #set up a 1x1 plot in a subroutine
+    #---------------------------
+    fig,ax1 = cpl.format_plot(Sx=Sx,Sy=Sy)
+
+    #---------------------------
+    #plot the pinning array
+    #---------------------------
+    cpl.plot_pins(ax1,size=disk_size)
     
-    #use your handy-dandy class to make the figure
-    pC = plotColloid.plotColloid(rows,columns,Sx,Sy,
-                                 scale_x=4.0,scale_y=4.0)
-
-
-    fig = pC.createAxes(suppress_axes_labels=2)
-    all_axes = fig.get_axes()
-
-    ax = all_axes[0]
     
     #-----------------------------
-    t0=int(sys.argv[1])
-    tf=int(sys.argv[2])
-
+    t0=0
+    tf=maxtime
+    delta_t=writemovietime 
+    starttime=t0
     
-    make_trails(ax,tf,delta_t=500,N=256,path1='',
-                SX=36.0,SY=36.0,size=100,line=2)
+    #---------------------------
+    #get and parse data
+    #---------------------------
+    datafile_prefix = "velocity_data/XV_data_t="
 
-    #work on calling the rest of this from the subroutine above
+    #if data_type == 0 , this will process all of smtest
+    id,type,xp,yp = cpl.get_and_parse_data(data_type,
+                                           starttime,
+                                           movie_type="cmovie")
 
-    #################################################################
-    #get and organize the data AKA the scary part
-    #################################################################
+    #the plot needs to know what size to make each particle
+    #this is overkill for monodisperse systems
+    size = disk_size*np.ones(len(type))
+    
+    #just do the trails, don't color the particles!
+    make_trails(ax1,tf,delta_t=500,N=N_disks,path1='',
+                SX=SX,SY=SY,size=disk_size,line=2)
 
-    #number of particles to draw trails of,s 
-    #could figure this out from array lengths after first import
-    N=int(sys.argv[3])
-
-    #directory ='/home/mcdermott/Research/ActiveMatterProject/'
-    #directory+='k30springs/Ap3.0_N1200_Npins12_RL10000/frame_data/'
-
+    #add the particles on top of the tessellation
+    ax1.scatter(xp,yp,s=size,zorder=10,facecolor='k')
     
         
-    fig.tight_layout() #pad=0.0)
+    fig.tight_layout() 
 
     out_file="trails%d-%d.eps"%(t0,tf)
     plt.savefig(out_file)
