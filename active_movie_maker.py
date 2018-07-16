@@ -31,7 +31,7 @@ if __name__ == "__main__":
     data_types = [0,1,2] #["smtest", "ascii", "binary"]
 
     #the one we will use
-    data_type = data_types[1]
+    data_type = data_types[0]
 
     if data_type == 0:
         print("Reading directly from smtest (binary)")
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     #Sy=[0,36.5]
     #dt=0.002
 
-    disk_size=50  #hard coded by what "looks good"
+    disk_size=30  #hard coded by what "looks good"
 
     if data_type == 1:
         starttime=writemovietime
@@ -62,6 +62,8 @@ if __name__ == "__main__":
         starttime=0 
     time_inc=writemovietime
     maxtime=maxtime - time_inc
+
+    starttime=1000 #writemovietime
     
     #---------------------------
     #set up a 1x1 plot in a subroutine
@@ -92,7 +94,7 @@ if __name__ == "__main__":
     #make a two color map 
     mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
     
-    scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
+    scatter1=ax1.scatter(xp,yp,c=type,s=size,edgecolors='k',cmap=mycmap)
 
     #---------------------------------------------------------------
     #add an annotation

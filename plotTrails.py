@@ -4,7 +4,8 @@ import matplotlib.patches as patches
 
 from matplotlib import cm
 
-import classColloid.plotColloid as plotColloid
+#import classColloid.plotColloid as plotColloid
+import colloid_plot_library as cpl
 import data_importerDM as di
 
 import sys
@@ -14,6 +15,8 @@ import matplotlib.colors as mpl_colors
 #################################################################
 #################################################################
 def plot_ratchet_potential_2D(ax, L=36.0,Npins=24.0):
+    '''not recently updated.  use at your own risk.
+    '''
 
     Fp = 1
 
@@ -38,7 +41,9 @@ def plot_ratchet_potential_2D(ax, L=36.0,Npins=24.0):
 
 ################################################################
 def histogram_velocities(ax,time,filename=None,path=""):
-
+    '''not recently updated.  use at your own risk.
+    '''
+    
     tf=time
     delta_t=10
     t0= tf - delta_t*100

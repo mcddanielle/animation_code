@@ -5,6 +5,9 @@ A simple example of an animated plot
 SOURCE: http://matplotlib.org/examples/animation/simple_anim.html
 #to make a gif:
 https://eli.thegreenplace.net/2016/drawing-animated-gifs-with-matplotlib/
+
+trouble saving file, but animation library working:
+https://stackoverflow.com/questions/23856990/cant-save-matplotlib-animation
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,7 +23,7 @@ import sys
 import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
-
+plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
 ################################################################
 ################################################################
 ################################################################
@@ -46,19 +49,25 @@ if __name__ == "__main__":
     #get data for initial frame, 
     #------------------------------------------------------------------------
     inputfile = "Pa0"
-    
-    (Sx, Sy, radius, maxtime, writemovietime ) = cpl.get_input_data(inputfile)
 
+    if 0:
+        (Sx, Sy, radius, maxtime, writemovietime ) = cpl.get_input_data(inputfile)
+    Sx=[0,60.0]
+    Sy=[0,60.0]
+    radius=0.5
+    maxtime=40000020 #- 30 #30000 #10000000
+    writemovietime=30 #50
+    
     #get from Pa0
     #Sx=[0,36.5]
     #Sy=[0,36.5]
     #dt=0.002
 
-    disk_size=100  #hard coded by what "looks good"
+    disk_size=30  #hard coded by what "looks good"
 
-    starttime=0 
+    starttime=40000020 
     time_inc=writemovietime
-    maxtime=maxtime - time_inc
+    maxtime=starttime+999*time_inc  #maxtime - time_inc
     
     #---------------------------
     #set up a 1x1 plot in a subroutine
@@ -82,6 +91,16 @@ if __name__ == "__main__":
     #this is overkill for monodisperse systems
     size = disk_size*np.ones(len(type))
 
+
+    radius_ratio=2.0
+
+    for k in range(len(type)):
+        if type[k]==2:
+            size[k]=disk_size
+        else:
+            size[k]=disk_size*(radius_ratio**2)
+
+    
     #----------------------------------------------
     #plot the particles
     #----------------------------------------------
@@ -125,15 +144,23 @@ if __name__ == "__main__":
         #changing the fps should speed/slow the visual rate
         #do not change the extra_args unless you know what you're doing
         #this sets the codec so that quicktime knows how to handle the mp4
-        ani.save(outputfile, fps=12.0, 
+
+        ani.save(outputfile, fps=12.0,
                  extra_args=['-vcodec', 'libx264','-pix_fmt', 'yuv420p'])
+
+        '''
+        note that if you feed this code improper file names, 
+        you won't see the effects earlier as a code failure, 
+        it will just fail dramatically here
+        '''
+        
     else:
         #live animation for testing
         plt.show()
 
     sys.exit()
 
-    #####################################################################
+    ###################################################################
     #####################################################################
     #RESIZE PARTICLES BASED ON TYPE    
     #not efficient - python can do this much faster
@@ -141,12 +168,4 @@ if __name__ == "__main__":
     #since we only do this once, that is fine.
     #multiple times?  fix!
 
-    '''
-    radius_ratio=2.0
 
-    for k in range(len(type)):
-    if type[k]==1:
-        size[k]=disk_size
-    else:
-        size[k]=disk_size*(radius_ratio**2)
-    ''' 
