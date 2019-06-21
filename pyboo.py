@@ -83,8 +83,10 @@ def just_boo_it(pos,ax, diameter=1.0,verbose=True, markersize=10):
     #identify crystalline particles
     #####################################################
     xpos = boo.x_particles(q6m, bonds, nb_thr=4)
-    print(xpos)
-    print(xpos.mean())
+    
+    if(verbose):
+        print(xpos)
+        print(xpos.mean())
 
     #id the "surface" or edge particles
     surf = boo.x_particles(q6m, bonds, nb_thr=2) & np.bitwise_not(xpos)
@@ -136,7 +138,8 @@ if __name__ == "__main__":
     datafile_prefix = "velocity_data/XV_data_t="
     plot_file=datafile_prefix+"%08d"%(plot_time)
 
-    print(plot_file)
+    if(verbose):
+        print(plot_file)
     
     if get_ascii_data == 0:
         plot_file=plot_file+".npy"
