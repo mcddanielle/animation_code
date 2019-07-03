@@ -138,13 +138,13 @@ def animate_with_phase(i,scatter1,fileprefix,
         
         #unpack the extra_args - these are user defined by function
         scatter2 = extra_args[0]
-        time = extra_args[1]
-        y0 = extra_args[2]
+        #time = extra_args[1]
+        #y0 = extra_args[2]
 
         time_int = int(i/200)
 
         #print("")
-        data_new = [time[time_int],y0[time_int]]
+        data_new = [extra_args[1][time_int],extra_args[2][time_int]]
         scatter2.set_offsets(data_new)
         
         return scatter1,scatter2
@@ -165,8 +165,11 @@ if __name__ == "__main__":
     #this is because I'm adding a second subplot
     if 0:
         movie_type = "Simple"  # standard, single window
-    else:
+    elif 1:
         movie_type = "animate" # two panels, side by side, phase diagram
+    else:
+        movie_type = "animate_y0_time" # two panels, side by side, phase diagram
+        
     
     #Data files can be the following, smtest is fastest
     #smtest (single binary), ascii (velocity_data/XV...integer), binary (*npy)
@@ -194,7 +197,7 @@ if __name__ == "__main__":
     #######################################################################
     #times - may adjust if your initial sampling was too many / too long
     #######################################################################
-    starttime=0 
+    starttime=10000 
     time_inc=writemovietime     #make larger if the movie is too detailed
     maxtime=maxtime - time_inc  #make lesser if the movie is too long
     
@@ -243,7 +246,7 @@ if __name__ == "__main__":
     
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
 
-    if movie_type == "animate":
+    if movie_type != "Simple":
         #set up a yp vs. time plot... for now
         #get the data
 
@@ -256,15 +259,32 @@ if __name__ == "__main__":
         y0 = data_phase[2]
         fx0 = data_phase[3]
         fy0 = data_phase[4]
+
+        #phase calculations - TBD how to do this for our system
+        phi_y =  2*np.pi*(y0) #-np.mean(fy0)*time*0.01)
+        dphi_y = 2*np.pi*(fy0-np.mean(fy0))
+
+        if movie_type == "animate_y0_time":
+            ax2.plot(time,y0) #,c=type,s=size,cmap=mycmap)
+            scatter2=ax2.scatter(time[0],y0[0],
+                                 marker="o",s=50,c="magenta",zorder=9)
+
+            ax2.set_xlabel("time")
+            ax2.set_ylabel(r"$y_0$")
         
-        ax2.plot(time,y0) #,c=type,s=size,cmap=mycmap)
-        scatter2=ax2.scatter(time[0],y0[0],
-                             marker="o",s=50,c="magenta",zorder=9)
+        elif movie_type == "animate":
+            ax2.plot(phi_y,dphi_y) #,c=type,s=size,cmap=mycmap)
+            plot_time = int(starttime/200)
+            scatter2=ax2.scatter(phi_y[plot_time],dphi_y[plot_time],
+                                 marker="o",s=50,c="coral",zorder=9)
+
+            ax2.set_xlabel(r"$\phi_y$")
+            ax2.set_ylabel(r"$d\phi_{y}/dt$")
         
         #ax2.set_xlim(time,maxtime)
         #ax2.set_ylim(0.0,36.5)
-        ax2.set_xlabel("time")
-        ax2.set_ylabel(r"$y_0$")
+        
+
     #---------------------------------------------------------------
     #add an annotation
     #note: "force" was for a different system, here time is relevant
@@ -288,16 +308,28 @@ if __name__ == "__main__":
     elif movie_type == "animate":
         #note this is local
         function=animate_with_phase
+
         fargs=(scatter1,
                datafile_prefix,
                force_template,
                force_text,
                data_type,
-               (scatter2,time,y0))   #extra args     
+               (scatter2,phi_y,dphi_y))   #extra args            
 
         #following should resize system and pad, but with 1x1 grid
         #causes function to error
         fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
+
+    else:
+        fargs=(scatter1,
+               datafile_prefix,
+               force_template,
+               force_text,
+               data_type,
+               (scatter2,time,y0))   #extra args
+        
+        fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
+
         
     ani = animation.FuncAnimation(fig, 
                                   function,
