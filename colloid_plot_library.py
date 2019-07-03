@@ -43,12 +43,15 @@ def get_and_parse_data(data_type,starttime,
     '''
     
     init_file=datafile_prefix+"%08d"%(starttime)
-    
+    print(data_type)
+    #data_type=0
     if data_type == 0:
 
         #make a series of binary files in subroutine,
-        #only call once 
+        #only call once
+
         di.read_smtest(movie_type=movie_type)
+        #print("!")
         binary_file = "%s%s"%(init_file,".npy")
         particle_data = np.load(binary_file)            
         
@@ -115,34 +118,35 @@ def get_input_data(filename):
 
         #print(input_data_strings) #= di.get_data(file,2,sep=' ')
         density          = float(input_data_strings[0][1])
-        small_density    = float(input_data_strings[1][1])
-        large_density    = float(input_data_strings[2][1])
-        pdensity         = float(input_data_strings[3][1])
+        #small_density    = float(input_data_strings[1][1])
+        #large_density    = float(input_data_strings[2][1])
+        pdensity         = float(input_data_strings[1][1])
         
-        Sx               = [0.0,float(input_data_strings[4][1])]
-        Sy               = [0.0,float(input_data_strings[5][1])]
+        Sx               = [0.0,float(input_data_strings[2][1])]
+        Sy               = [0.0,float(input_data_strings[3][1])]
         
-        radius           = float(input_data_strings[6][1])
-        large_radius     = float(input_data_strings[7][1])
-        runtime          = int(  input_data_strings[8][1])
-        runforce         = float(input_data_strings[9][1])
-        dt               = float(input_data_strings[10][1])
+        radius           = float(input_data_strings[4][1])
+        #large_radius     = float(input_data_strings[7][1])
+        runtime          = int(  input_data_strings[5][1])
+        runforce         = float(input_data_strings[6][1])
+        dt               = float(input_data_strings[7][1])
         
-        maxtime          = int(input_data_strings[11][1])
-        writemovietime   = int(input_data_strings[12][1])
+        maxtime          = int(input_data_strings[8][1])
+        writemovietime   = int(input_data_strings[9][1])
         
-        kspring          = float(input_data_strings[13][1])
-        lookupcellsize   = float(input_data_strings[14][1])
-        potentialrad     = float(input_data_strings[15][1])
-        potentialmag     = float(input_data_strings[16][1])
-        lengthscale      = float(input_data_strings[17][1])
-        drivemag         = float(input_data_strings[18][1])
-        drivefrq         = float(input_data_strings[19][1])
-        decifactor       = int(  input_data_strings[20][1])
-        restart          = int(  input_data_strings[21][1])
-        drive_step_time  = int(  input_data_strings[22][1]) 
-        drive_step_force = float(input_data_strings[23][1])
-        
+        kspring          = float(input_data_strings[10][1])
+        lookupcellsize   = float(input_data_strings[11][1])
+        potentialrad     = float(input_data_strings[12][1])
+        potentialmag     = float(input_data_strings[13][1])
+        lengthscale      = float(input_data_strings[14][1])
+        drivemag         = float(input_data_strings[15][1])
+        drivefrq         = float(input_data_strings[16][1])
+        decifactor       = int(  input_data_strings[17][1])
+        restart          = int(  input_data_strings[18][1])
+        drive_step_time  = int(  input_data_strings[19][1]) 
+        drive_step_force = float(input_data_strings[20][1])
+
+
         return(Sx, Sy, radius, maxtime, writemovietime )
 
     elif filename == "Pcw0":
@@ -182,19 +186,23 @@ def get_input_data(filename):
         sys.exit()
         
 ################################################################
-def format_plot(Sx=[0,36.5], Sy=[0,36.5]):
-
-    #---------------------------
-    #Set up a gridded figure
-    #---------------------------
-    rows=1
-    columns=1
+def format_plot(Sx=[0,36.5], Sy=[0,36.5],rows=1,columns=1,movieoption="simple"):
 
     gs=gridspec.GridSpec(rows,columns)
     fig = plt.figure(figsize=(6*columns,6*rows))
 
-    ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
+    #---------------------------
+    #Set up a gridded figure
+    #---------------------------
     
+    if movieoption == "simple":
+        ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
+        
+    elif movieoption == "animate":
+
+        ax1 = fig.add_subplot(gs[0,0])  #scatter plot of particles
+        ax2 = fig.add_subplot(gs[0,1])  #scatter plot of particles
+
     #---------------------------------
     #add labels and axes ticks
     #-----------------------------------
@@ -207,11 +215,16 @@ def format_plot(Sx=[0,36.5], Sy=[0,36.5]):
     ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
     ax1.yaxis.set_major_locator(ticker.MaxNLocator(num_ticks))
 
-    return fig,ax1
+    if movieoption == "simple":
+        return fig,ax1
+    elif movieoption == "animate":
+
+        return fig,ax1,ax2
 
 ################################################################
 def animate(i,scatter1,fileprefix,
-            force_template,force_text,data_type):
+            force_template,force_text,data_type,
+            extra_args):
     '''
     subroutine driven by the matplotlib animation library
 
@@ -247,6 +260,9 @@ def animate(i,scatter1,fileprefix,
 
     fp: file pointer
     nV: number vorticles
+
+    optional args:
+
     '''
 
     ############################################################
@@ -282,6 +298,7 @@ def animate(i,scatter1,fileprefix,
 
     #specially formatted array to update scatter plot
     data = np.hstack((xp[:i,np.newaxis], yp[:i, np.newaxis]))
+    #data = np.hstack((xp[:i,0], yp[:i,0]))
 
     #update the scatter plot created in the main function with the new data
     scatter1.set_offsets(data)
@@ -293,11 +310,34 @@ def animate(i,scatter1,fileprefix,
     #update the text label for the new time
     force_text.set_text(force_template%(i))
 
-    #print current time to user 
-    print(i)
-    
-    return scatter1,
+    #print current time to user
+    verbose = True
+    if verbose == True and (i%10000==0):
+        print("plotting frame: %d"%(i))
 
+    if 0: #extra_args != None:
+        #print(extra_args)
+        scatter2 = extra_args[0]
+        
+        time = extra_args[1]
+        time.append(i)
+        print("time", time)
+        yp0 = [extra_args[2]]
+        yp0.append(yp[0])
+        print("yp0", yp0)
+        print(np.newaxis) #what does this even do?
+
+        print("")
+        data = np.hstack((np.array(time)[:i,np.newaxis],
+                          np.array(yp0)[:i,np.newaxis])) #,
+        
+        print("data", data)
+        
+        scatter2.set_offsets(data)
+        
+        return scatter1,scatter2
+    
+    return scatter1
 #--------------------------------------------------------------
 #add pin locations to scatter plot
 #--------------------------------------------------------------
@@ -382,7 +422,9 @@ if __name__ == "__main__":
     mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
 
     #plot the data
-    scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
+    scatter1=ax1.scatter(xp,yp,
+                         c=type,
+                         s=size,cmap=mycmap,edgecolor='k',linewidth=2)
 
     #------------------------------------------------------------------------
     #add an annotation

@@ -22,8 +22,6 @@ import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
 
-
-
 ################################################################
 ################################################################
 ################################################################
@@ -36,18 +34,18 @@ if __name__ == "__main__":
     #---------------------------
     #system specific variables
     #---------------------------
-    disk_size=100
+    disk_size=15
 
     Sx=[0,60.0]
     Sy=[0,60.0]
 
-    plot_time=4500000 #time to plot
+    plot_time=10000 #3600 #1200000 #24000000 #49950000 #time to plot
     print(plot_time)
 
     #---------------------------
     #set up a 1x1 plot in a subroutine
     #---------------------------
-    fig,ax1 = cpl.format_plot()
+    fig,ax1 = cpl.format_plot(Sx=Sx,Sy=Sx)
 
     #------------------------------------------------------------------------
     #get data for initial frame, 
@@ -56,13 +54,17 @@ if __name__ == "__main__":
     plot_file=datafile_prefix+"%08d"%(plot_time)
 
     print(plot_file)
+    
     if get_ascii_data == 0:
         plot_file=plot_file+".npy"
-
+        particle_data = np.load(plot_file)
+    else:
+        particle_data = di.get_data(plot_file,7,sep=" ")
+        
     if(verbose):
         print("Reading in file: %s"%(plot_file))
         
-    particle_data = di.get_data(plot_file,7,sep=" ")
+
         
     id   = particle_data[0]  #NOT USED
     type = particle_data[1]  #1 OR 2, SETS SIZE, FIXED FOR ANIMATION
@@ -82,17 +84,23 @@ if __name__ == "__main__":
     size  = np.zeros(len(type))
     for k in range(len(type)):
         if type[k]==1:
-            size[k]=disk_size
+            size[k]= 1.4**2 * disk_size
+        else:
+            size[k]= disk_size
             
 
-    #make a two color map 
-    mycmap = colors.ListedColormap(['mediumseagreen'])
+    #make a two color map
+    if 0:
+        mycmap = colors.ListedColormap(['mediumseagreen'])
+    else:
+        mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
+
 
     #---------------------------------------------------------
     #Finally plot the data
     #---------------------------------------------------------
     cpl.plot_pins(ax1,size=disk_size)
-    scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
+    scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap,edgecolor='k')
 
     #------------------------------------------------------------------------
     # (turned off) add an annotation

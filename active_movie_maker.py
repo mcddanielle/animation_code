@@ -31,7 +31,7 @@ if __name__ == "__main__":
     data_types = [0,1,2] #["smtest", "ascii", "binary"]
 
     #the one we will use
-    data_type = data_types[0]
+    data_type = 0 #data_types[0]
 
     if data_type == 0:
         print("Reading directly from smtest (binary)")
@@ -54,16 +54,17 @@ if __name__ == "__main__":
     #Sy=[0,36.5]
     #dt=0.002
 
+
     disk_size=30  #hard coded by what "looks good"
 
-    if data_type == 1:
+    if 1:
         starttime=writemovietime
     else:
         starttime=0 
     time_inc=writemovietime
     maxtime=maxtime - time_inc
 
-    starttime=1000 #writemovietime
+    starttime=writemovietime
     
     #---------------------------
     #set up a 1x1 plot in a subroutine
@@ -79,6 +80,8 @@ if __name__ == "__main__":
     #get and parse data
     #---------------------------
     datafile_prefix = "velocity_data/XV_data_t="
+    data_type=0
+    
     id,type,xp,yp = cpl.get_and_parse_data(data_type,
                                            starttime,
                                            movie_type="cmovie")

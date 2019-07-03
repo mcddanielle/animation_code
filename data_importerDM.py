@@ -73,6 +73,7 @@ def read_smtest(infile='smtest', movie_type="smovie"):
                         x_array[n] = data1[0][1][0]
                         y_array[n] = data1[0][1][1]
                     except:
+                        print("problem reading smovie")
                         print(data1)
                         print(n)
 
@@ -85,12 +86,14 @@ def read_smtest(infile='smtest', movie_type="smovie"):
                         y_array[n] = data1[0][1][1]
                         r_array[n] = data1[0][1][2]
                     except:
+                        print("problem reading cmovie")
                         print(data1)
                         print(n)                    
 
             save_file=datafile_prefix+"%08d"%(time)
 
             particle_data = np.array([id,type,x_array,y_array])
+            #print("!!")
             np.save(save_file,particle_data)
             
     return
@@ -109,7 +112,7 @@ def import_text(filename, separator):
                            skipinitialspace=True):
         if line:
             if line[0].startswith("#"):
-                print("")
+                continue #print("")
             elif line:
                 #print line
                 yield line
@@ -118,7 +121,7 @@ def import_text(filename, separator):
 #end CSV reader------------------------------------------
 #------------------------------------------------------------
 
-def get_data(file_name,columns,sep=' ',path1=''):
+def get_data(file_name,columns,sep=' ',path1='',verbose=False):
     '''Really nice data importer, since it works for any columnar data.
 
     file_name = "data.txt"
@@ -128,8 +131,9 @@ def get_data(file_name,columns,sep=' ',path1=''):
     '''
 
     file_name=path1+file_name
-    print(path1)
-    print(file_name)
+    if verbose == True:
+        print(path1)
+        print(file_name)
 
     import_data = []
 

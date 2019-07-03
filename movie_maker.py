@@ -16,13 +16,13 @@ import matplotlib.colors as colors
 #import matplotlib.ticker as ticker
 
 import matplotlib.animation as animation
-import sys
+import sys, os
 
 #functions written by D.M. to get and plot specific data files
 #import data_importerDM as di
 import colloid_plot_library as cpl
 
-plt.rc('font', size=20)
+plt.rc('font', size=14)
 plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
 ################################################################
 ################################################################
@@ -30,11 +30,16 @@ plt.rcParams['animation.ffmpeg_path'] = '/usr/bin/ffmpeg'
 
 if __name__ == "__main__":
 
+    directory="velocity_data"
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    
     #all possibilities
     data_types = [0,1,2] #["smtest", "ascii", "binary"]
 
     #the one we will use
-    data_type = data_types[0]
+    data_type = data_types[2]
 
     if data_type == 0:
         print("Reading directly from smtest (binary)")
@@ -50,14 +55,17 @@ if __name__ == "__main__":
     #------------------------------------------------------------------------
     inputfile = "Pa0"
 
-    if 0:
+    if 1:
         (Sx, Sy, radius, maxtime, writemovietime ) = cpl.get_input_data(inputfile)
+
+        #maxtime = 10*writemovietime
+    '''
     Sx=[0,60.0]
     Sy=[0,60.0]
     radius=0.5
     maxtime=40000020 #- 30 #30000 #10000000
     writemovietime=30 #50
-    
+    '''
     #get from Pa0
     #Sx=[0,36.5]
     #Sy=[0,36.5]
@@ -65,8 +73,10 @@ if __name__ == "__main__":
 
     disk_size=30  #hard coded by what "looks good"
 
-    starttime=40000020 
+    starttime=writemovietime #49500000 #
+    starttime = 40000020 
     time_inc=writemovietime
+    #maxtime=starttime + 10000 # - 30 #40010000
     maxtime=starttime+999*time_inc  #maxtime - time_inc
     
     #---------------------------
@@ -108,15 +118,26 @@ if __name__ == "__main__":
     #make a two color map 
     mycmap = colors.ListedColormap(['cornflowerblue', 'red'])
     
-    scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap)
+    scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap,edgecolor='k',linewidth=1)
 
     #---------------------------------------------------------------
     #add an annotation
     #note: "force" was for a different system, here time is relevant
     #-------------------------------------------------------------
     force_template = r'time = %d'
-    force_text = ax1.text(0.4, 1.01, '', transform=ax1.transAxes)
-            
+
+
+    label=True
+    if label == True:
+        figure_text1 = r"Fig. 11(b), Yang $et$ $al.$"
+        figure_text2 = r"$\phi = 0.59$, $F_D/F_P = 0.90$"
+    
+        ax1.text(-0.1, 1.1, figure_text1, transform=ax1.transAxes) 
+        ax1.text(0.01, 1.01, figure_text2, transform=ax1.transAxes)
+
+    #add the time at each subsequent timestep
+    force_text = ax1.text(0.6, 1.01, '', transform=ax1.transAxes)
+   
     #-----------------------------------------------------------------
     #finally animate everything
     #-----------------------------------------------------------------   
@@ -129,7 +150,7 @@ if __name__ == "__main__":
                                          force_template,
                                          force_text,
                                          data_type),
-                                  interval=20, blit=False)
+                                  interval=20, blit=True)
 
         
     #following should resize system and pad, but with 1x1 grid

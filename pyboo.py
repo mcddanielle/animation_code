@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 Make a png/pdf of a single frame.
@@ -30,12 +30,12 @@ plt.rc('font', size=20)
 ################################################################
 ################################################################
 
-def just_boo_it(pos,ax, diameter=1.0,verbose=True, markersize=10):
+def just_boo_it(pos,ax, diameter=1.0,verbose=False, markersize=10):
     '''
     '''
 
     #somewhat arbitrary max distance between neighbors
-    maxbondlength=diameter*np.sqrt(2) #*diameter
+    maxbondlength=diameter * 1.05 #np.sqrt(2) #*diameter
 
     #use library to create spatial indexing
     #the following line creates an instance of the object
@@ -114,7 +114,7 @@ def just_boo_it(pos,ax, diameter=1.0,verbose=True, markersize=10):
     
 if __name__ == "__main__":
 
-    verbose = 1
+    verbose = 0
     get_ascii_data = 1
     #---------------------------
     #system specific variables
