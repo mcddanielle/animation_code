@@ -189,17 +189,19 @@ def get_input_data(filename):
 def format_plot(Sx=[0,36.5], Sy=[0,36.5],rows=1,columns=1,movieoption="simple"):
 
     gs=gridspec.GridSpec(rows,columns)
-    fig = plt.figure(figsize=(6*columns,6*rows))
+    
 
     #---------------------------
     #Set up a gridded figure
     #---------------------------
     
     if movieoption == "simple":
+        fig = plt.figure(figsize=(6*columns,6*rows))
         ax1 = fig.add_subplot(gs[:])  #scatter plot of particles
         
-    elif movieoption == "animate":
+    elif "animate" in movieoption:
 
+        fig = plt.figure(figsize=(5*columns,6*rows))
         ax1 = fig.add_subplot(gs[0,0])  #scatter plot of particles
         ax2 = fig.add_subplot(gs[0,1])  #scatter plot of particles
 
@@ -217,7 +219,7 @@ def format_plot(Sx=[0,36.5], Sy=[0,36.5],rows=1,columns=1,movieoption="simple"):
 
     if movieoption == "simple":
         return fig,ax1
-    elif movieoption == "animate":
+    elif "animate" in movieoption:
 
         return fig,ax1,ax2
 
@@ -430,9 +432,13 @@ if __name__ == "__main__":
     #add an annotation
     #note: "force" was for a different system, here time is relevant
     #------------------------------------------------------------------------
-    force_template = r'time = %d'
-    force_text = ax1.text(0.4, 1.01, '', transform=ax1.transAxes)
+    if movie_type == "Simple":
+        force_template = r'time = %d'
+        force_text = ax1.text(0.4, 1.01, '', transform=ax1.transAxes)
+    elif "animate" in movie_type:
 
+        force_template = r'$F_D$ = %1.2f'
+        force_text = ax1.text(0.4, 1.01, '', transform=ax1.transAxes)
     #------------------------------------------------------------------------
     #finally animate everything/make png
     #------------------------------------------------------------------------   
