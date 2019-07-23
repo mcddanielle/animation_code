@@ -254,8 +254,6 @@ if __name__ == "__main__":
     image_test = True #if true, make a png instead of a movie to look at the "frame"
     #image_test = False
     
-    #drop = 2000  #used to estimate the updates to the animated plots (hardcoded in animate() routine)
-    
     #name of the movie file - make this anything you want
     outputfile="Supp1.mp4"
 
@@ -333,7 +331,8 @@ if __name__ == "__main__":
         #corr = True/False turns off/on the corrugations in the plot
         corr = False
         corr = True
-        add_contour(ax1,36.5,20.0,corrugated = corr)
+        #20 is arbitrary... size measure
+        add_contour(ax1,Sy[1],20.0,corrugated = corr)
 
     #---------------------------
     #get and parse data
@@ -350,10 +349,11 @@ if __name__ == "__main__":
     shift = False
     if shift == True:
         for i in range(len(yp)):
-            if yp[i] > 36.5/4.0:
-                yp[i] -= 36.5/4.0
+            #hardcoded to move up 1/4 system size.  could be more elegant.
+            if yp[i] > Sy[1]/4.0:  
+                yp[i] -= Sy[1]/4.0
             else:
-                yp[i] += 0.75*36.5
+                yp[i] += 0.75*Sy[1]
 
     
     
@@ -370,18 +370,19 @@ if __name__ == "__main__":
     #----------------------------------------------
     #plot the particles
     #----------------------------------------------
-    
-    #make a two color map on axis
+        
     if movie_type == "Simple":
+        #make a two color map given types 1,2
         mycmap = colors.ListedColormap(['mediumseagreen','coral'])
     else:
+        #this colors a particle bright pink to make it obvious
         mycmap = colors.ListedColormap(['magenta'])
     
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap,edgecolor='k')
 
+    
     if movie_type != "Simple":
-        #set up a yp vs. time plot... for now
-        #get the data
+        #get the data to make either the phase plot or the vy vs. fd plot.  mainly hardwired.
 
         #notice that we are NOT using the DM developed data importer
         #and instead using a numpy built-in function
@@ -399,11 +400,14 @@ if __name__ == "__main__":
 
         if movie_type == "animate_fd_v0":
 
-            drop = 4000.0
+            drop = 4000.0  #this is from Pcw0 as well, but we would need cpl to return it...
             curr_inc = 0.001
             fd = time*curr_inc/drop
-            
-            ax2.plot(fd,fy0,"o--") #,c=type,s=size,cmap=mycmap)
+
+            #plot the entire data set
+            ax2.plot(fd,fy0,"o--") 
+
+            #plot the "bouncing ball" that will be updated to move with the animation
             scatter2=ax2.scatter(fd[0],fy0[0],
                                  marker="o",s=100,c="magenta",zorder=9)
 

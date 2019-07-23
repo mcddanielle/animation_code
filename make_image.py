@@ -14,7 +14,7 @@ import matplotlib.colors as colors
 #from matplotlib import cm
 import matplotlib.ticker as ticker
 
-import sys
+import sys, getopt
 
 #functions written by D.M. to get and plot specific data files
 import data_importerDM as di
@@ -24,11 +24,38 @@ plt.rc('font', size=20)
 
 ################################################################
 ################################################################
+def get_command_args(argv):
+   plottime = ''
+   file_output_type = ".png"
+   try:
+      opts, args = getopt.getopt(argv,"ht:f:",["time=","file="])
+   except getopt.GetoptError:
+      print('make_image.py -t <plottime> -f <file_output_type>')
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print('make_image.py -t <plottime> -f <file_output_type>')
+         sys.exit()
+      elif opt in ("-t", "--time"):
+         plottime = int(arg)
+      elif opt in ("-f", "--file"):
+         outputfile = arg
+
+   return plottime, file_output_type
+
+################################################################
 ################################################################
 
     
 if __name__ == "__main__":
 
+
+    try:
+        plot_time, file_output_type = get_command_args(sys.argv[1:])
+    except:
+        plot_time=9000 
+    print("plotting system at time: ", plot_time)
+    
     verbose = 1
     get_ascii_data = 1
     #---------------------------
@@ -38,9 +65,6 @@ if __name__ == "__main__":
 
     Sx=[0,60.0]
     Sy=[0,60.0]
-
-    plot_time=10000 #3600 #1200000 #24000000 #49950000 #time to plot
-    print(plot_time)
 
     #---------------------------
     #set up a 1x1 plot in a subroutine
@@ -112,7 +136,8 @@ if __name__ == "__main__":
         force_text = ax1.text(0.5, 1.05, '', ha='center',
                               transform=ax1.transAxes,fontsize=22)
 
-    out_name="scatter_figure.png"
+    out_name="scatter_figure"+file_output_type
+    
     fig.savefig(out_name)
         
     sys.exit()
