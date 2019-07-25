@@ -178,8 +178,10 @@ def get_input_data(filename):
         radius = 1.0
         maxtime = tot_time
         writemovietime = writemovie
+
+        dt=0.01 #hardwired in MD code
         
-        return(Sx, Sy, radius, maxtime, writemovietime )
+        return(Sx, Sy, radius, maxtime, writemovietime, drop, dc_curr_incr, dt, decifactor )
     
     else:
         print("TBD")

@@ -27,13 +27,75 @@ from matplotlib import cm
 import matplotlib.animation as animation
 
 #to work with files, call sys.exit(), etc
-import sys
+import sys, getopt
 
 #functions written by D.M. to get and plot specific data files
 #import data_importerDM as di
 import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
+
+################################################################
+def get_command_args(argv):
+
+   ############################################################
+   #hardwire some parameters here (conveniently top of file)
+   ############################################################
+   outputfile="Supp1.mp4"
+   inputfile = "Pcw0"
+   movie_type = "Simple"
+   data_type = 0  #smtest is fastest (0 is preferable)
+   zoom=True
+   disk_size=200  
+   starttime=0 #int(3*10000/4.0)
+   corr = False
+   image_test = True
+   image_test_name = "test.png"
+   verbose = False
+   shift = False #hardwired for now, can't do any new ones
+
+   #############################################################
+   #put all of the flags in a string for a rudimentary help menu
+   ############################################################
+   information_string='channel_colloid_movie_maker.py -i <inputfile Pcw0> -o <outputfile string.mp4> -m <movie_type string>  -d <data_type 0/1/2> -z <zoom 0/1>  -s <disk_size int>  -t <starttime int> -c <corrugation 0/1> --image --image_name -v/--verbose'
+
+   ####################################
+   #optionally change parameters here
+   ####################################
+   try:
+      opts, args = getopt.getopt(argv,"hi:o:m:d:z:s:t:c:v:",["inputfile=","outputfile=","movie_type=","data_type=","zoom=","disk_size=","starttime=","corr=","image=","image_name=","verbose="])
+   except getopt.GetoptError:
+      print(information_string)
+      sys.exit(2)
+   for opt, arg in opts:
+      if opt == '-h':
+         print(information_string)
+         sys.exit()
+      elif opt in ("-i", "--inputfile"):
+         plottime = str(arg)
+      elif opt in ("-o", "--outputfile"):
+         outputfile = str(arg)
+      elif opt in ("-m", "--movie_type"):
+         movie_type = str(arg)
+      elif opt in ("-d", "--data_type"):
+         data_type = int(arg)
+      elif opt in ("-z", "--zoom"):
+         zoom = bool(int(arg))
+      elif opt in ("-s", "--disk_size"):
+         disk_size = int(arg) #although could be a float in principle
+      elif opt in ("-t", "--starttime"):
+         starttime = int(arg)
+      elif opt in ("-c", "--corr"):
+         corr = bool(int(arg))
+      elif opt in ("--image"):
+         image_test = bool(int(arg))
+      elif opt in ("--image_name"):
+         image_test_name = arg
+      elif opt in ("-v","--verbose"):
+         verbose = arg
+         
+   #wrap into a hash instead?
+   return (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift)
 
 ##########################################################
 #ADD CONTOUR PLOT
@@ -49,31 +111,28 @@ def add_contour(ax,L,N,corrugated = True):
     Optional Arguments:
 
     corrugated (default = True)  
-    Adds the washboard in the y-direction.  Hardwired for a single parameter set.
-
+    Adds the washboard in the y-direction.  
+    Hardwired for a single parameter set.    
     '''
 
     a_p = L/N
 
+    #assuming Tiare's trough system, so we won't want to cover the entire range
     X = np.arange(0, L/2.0, 0.1)
     Y = np.arange(0, L, 0.1)
     X, Y = np.meshgrid(X, Y)
 
+    Z_mag = 2.0 # set by what "looks good"
+    
     if corrugated == False:
-        Z = 2.0*np.sin(2*np.pi*X/L)
+        Z = Z_mag*np.sin(2*np.pi*X/L)
     else:
-        Z = np.sin(2*np.pi*Y/a_p) + 2.0*np.sin(2*np.pi*X/L)
-
+        Z = np.sin(2*np.pi*Y/a_p) + Z_mag*np.sin(2*np.pi*X/L)
 
     cmap=cm.coolwarm_r
-    ls = LightSource(315, 45)
-    rgb = ls.shade(Z, cmap)
 
-    #got goofy error messages about the removed kwargs
-    #cset = ax.contourf(X, Y, Z, zdir='z', offset=-1, cmap=cmap,rasterized=True,alpha=0.5)
+    #alphs is the degree of transparency, again, set by what looks good.
     cset = ax.contourf(X, Y, Z, cmap=cmap,alpha=0.25)
-
-    #ax.imshow(rgb)
 
     #ax1.set_xlim(15,20)
     #ax1.set_ylim(15,20)
@@ -101,6 +160,32 @@ def print_dt(data_type):
 
     return
 
+################################################################
+def vertical_shift(yp,SY=36.5,percent_shift=0.25):
+    '''
+    if the interesting action is happening too low,
+    shift the entire data set up/down
+    note that we're hardwiring the system size and the degree of the shift
+    so this also needs to be rewritten
+
+    required arguments:
+    yp: (type numpy array) data that needs to be moved, nominally y-positions of particles 
+
+    optional arguments: 
+    SY: (type floating point scalar) system size in shift direction
+    percent_shift: (type floating point scalar) amount of SY to shift by, 
+                       may be positive/negative
+    '''
+    shift = SY*percent_shift
+        
+    for m in range(len(yp)):
+        if yp[m] > shift:
+            yp[m] -= shift #shift everyone at the top 3/4 down
+        else:
+            yp[m] += (1-shift) #move the bottom 1/4 up to the top 1/4
+            
+    return
+                
 ################################################################
 def animate_with_phase(i,scatter1,fileprefix,
             force_template,force_text,data_type,
@@ -167,15 +252,17 @@ def animate_with_phase(i,scatter1,fileprefix,
     xp = particle_data[2]
     yp = particle_data[3] #- 36.5/4.0
 
-    shift = False
-    if shift == True:
-        for m in range(len(yp)):
-            if yp[m] > 36.5/4.0:
-                yp[m] -= 36.5/4.0
-            else:
-                yp[m] += 0.75*36.5
-    
-    
+    if extra_args != None:
+        shift = extra_args[3]
+        drop = extra_args[4]
+        curr_inc = extra_args[5]
+        verbose = extra_args[6]
+        decifactor=extra_args[7]
+        
+        if shift == True:
+           #hardwired parameters
+           vertical_shift(yp)
+
     '''
     #if you need to change the particle sizes with time
     #for instance if your system is under compression
@@ -186,7 +273,7 @@ def animate_with_phase(i,scatter1,fileprefix,
         scatter1.set_sizes(new_sizes)
     '''
 
-    #specially formatted array to update scatter plot
+    #specially formatted array to update positions in scatter plot
     #format is in pairs [x1,y1], [x2,y2], etc
     data = np.hstack((xp[:i,np.newaxis], yp[:i, np.newaxis]))
     #data = np.hstack((xp[:i,0], yp[:i,0]))
@@ -198,48 +285,61 @@ def animate_with_phase(i,scatter1,fileprefix,
     #color_array = np.array(something)
     #scatter1.set_array(color_array)
 
-    #update the text
-    drop = 4000.0
-    curr_inc = 0.001
-    fd = (i//drop)*curr_inc
+
+    #The driving force is calculating assuming you are
+    #ramping it up as in the MD code (by the curr_inc every drop steps)
+    fd = (i//drop)*curr_inc 
     if force_template:
         force_text.set_text(force_template%(fd))
     
-    #print current time to user
-    verbose = True
-    if verbose == True and (i%10000==0):
+
+    if verbose == True and (i%decifactor==0):
         print("plotting frame: %d"%(i))
 
-    if extra_args != None and (i%100==0):
+        
+    #TODO: this i%100==0 is hardcoded, find/fix
+    if extra_args != None and (i%decifactor==0):
         
         #unpack the extra_args - these are user defined by function
         scatter2 = extra_args[0]
-        #time = extra_args[1]
-        #y0 = extra_args[2]
-        
-        time_int = int(i/100)
 
-        #print("")
+        #independent variable 1
+        #time = extra_args[1]  #or phi_y or fd
+
+        #dependent variable 2
+        #y0 = extra_args[2]
+
+        #TODO: this i%100==0 is hardcoded, find/fix
+        time_int = int(i/10000)
+        #print(time_int)
+        
+
         try:
+            #To be general, I'm not naming extra_args[1] and [2]
+            #they are the independent and dependent variables of the plot
+            #to change the "bouncing ball" (magenta circle)
+            #give the .set_offsets() method a
+            #carefully formatted data point (x,y)
+            #so the bouncing ball is plotted at this integer time
+
             data_new = [extra_args[1][time_int],extra_args[2][time_int]]
-            #data_new = [extra_args[1][i],extra_args[2][i]]
+
+            #update the bouncing ball point location
             scatter2.set_offsets(data_new)
         except:
             print("data_new doesn't exist",i,time_int)
 
-                #update the text label for the new time
-                
+        #update the text label for the new FORCE (fd)
+        #this is for the "animate: modes
         if force_template:
-
             force_text.set_text(force_template%(fd))
             return force_text,scatter1,scatter2
         else:
             return scatter1,scatter2
             
-
+    #"Simple" mode
     #update the text label for the new time
     if force_template:
-    
         return force_text,scatter1
     else:
         return scatter1
@@ -250,31 +350,39 @@ def animate_with_phase(i,scatter1,fileprefix,
 
 if __name__ == "__main__":
 
-    verbose = False
-    image_test = True #if true, make a png instead of a movie to look at the "frame"
+    (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift) = get_command_args(sys.argv[1:])
+   
+    #verbose = False
+    #image_test = True #if true, make a png instead of a movie to look at the "frame"
     #image_test = False
     
     #name of the movie file - make this anything you want
-    outputfile="Supp1.mp4"
+    #TODO command line arg
+    #outputfile="Supp1.mp4"
 
     #name of parameter file, this varies by simulation (Pa0, Pcw0, etc)
-    inputfile = "Pcw0"
+    #inputfile = "Pcw0"
     
     #this is because I'm adding a second subplot
+    #TODO command line arg
+
+    '''
     if 1:
         movie_type = "Simple"        # one panel standard, single window
     elif 1:
         movie_type = "animate"       # two panels, side by side, phase diagram
     else:
         movie_type = "animate_fd_v0" # two panels, side by side, Force-Velocity diagram
-
+    '''
         
     ###########################################################################
     #Data files format
     #smtest (single binary), ascii (velocity_data/XV...integer), binary (*npy)
     #[0="smtest", 1="ascii", 2="npy style binary"]
     ############################################################################
-    data_type = 0  #smtest is fastest (0 is preferable)
+    #TODO command line arg
+
+    #data_type = 0  #smtest is fastest (0 is preferable)
 
     #-----------------------------------------------------------------------------------
     #get data for initial frame, this is either smtest, or one of the alternate formats
@@ -286,22 +394,37 @@ if __name__ == "__main__":
 
     #get the data from Pcw0 - hardwired for a certain format
     #this could be improved
-    (Sx, Sy, radius, maxtime, writemovietime ) = cpl.get_input_data(inputfile)
-
+    parameters_MD = cpl.get_input_data(inputfile)
+    Sx=parameters_MD[0]
+    Sy=parameters_MD[1]
+    radius=parameters_MD[2]
+    maxtime=parameters_MD[3]
+    writemovietime=parameters_MD[4]
+    drop=parameters_MD[5]
+    dc_curr_incr=parameters_MD[6]
+    dt=parameters_MD[7]
+    decifactor=parameters_MD[8]
+    
     #This is to zoom in along the x-axis
     #and cut some of the blank space, could tweak the aspect ratio more
-    Sx[1]=Sx[1]/2.0
+
+    #zoom=True
+    if zoom == True:
+        Sx[1]=Sx[1]/2.0
     
     #hard coded by what "looks good" basically a ratio of system size
     #and fig size to make the particles look the size
     #of their interaction length -
     #this is tricky with this system since they don't have a well defined size.
-    disk_size=200  
+
+    #disk_size=200  
 
     #######################################################################
     #times - may adjust if your initial sampling was too many / too long
     #######################################################################
-    starttime=0 #int(3*10000/4.0) 
+
+
+    #starttime=0 #int(3*10000/4.0) 
     time_inc=writemovietime     #make larger if the movie is too detailed
     maxtime=maxtime - time_inc  #make lesser if the movie is too long
     
@@ -331,6 +454,7 @@ if __name__ == "__main__":
         #corr = True/False turns off/on the corrugations in the plot
         corr = False
         corr = True
+        #TODO document and understand the 20.
         #20 is arbitrary... size measure
         add_contour(ax1,Sy[1],20.0,corrugated = corr)
 
@@ -346,16 +470,11 @@ if __name__ == "__main__":
     #screen, so the interesting behavior is obscured by the pbc.
     #when you shift the particle positions, you have to account for the pbc.
     #note that this is NOT a pythonic way to do this, so it is probably inefficient
+
+    #TODO, make shift an argument to animate, otherwise you have to hardcode it in
     shift = False
     if shift == True:
-        for i in range(len(yp)):
-            #hardcoded to move up 1/4 system size.  could be more elegant.
-            if yp[i] > Sy[1]/4.0:  
-                yp[i] -= Sy[1]/4.0
-            else:
-                yp[i] += 0.75*Sy[1]
-
-    
+        vertical_shift(yp)
     
     #--------------------------------------------
     #COLOR THE PARTICLES
@@ -364,12 +483,8 @@ if __name__ == "__main__":
     #make all particles the same size
     size = disk_size*np.ones(len(type))
 
-    #this is to color the driven particle differently than non-driven
+    #color the driven particle differently than non-driven
     type[0] = 2
-
-    #----------------------------------------------
-    #plot the particles
-    #----------------------------------------------
         
     if movie_type == "Simple":
         #make a two color map given types 1,2
@@ -377,7 +492,10 @@ if __name__ == "__main__":
     else:
         #this colors a particle bright pink to make it obvious
         mycmap = colors.ListedColormap(['magenta'])
-    
+
+    #----------------------------------------------
+    #plot the particles
+    #----------------------------------------------
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap,edgecolor='k')
 
     
@@ -400,9 +518,10 @@ if __name__ == "__main__":
 
         if movie_type == "animate_fd_v0":
 
-            drop = 4000.0  #this is from Pcw0 as well, but we would need cpl to return it...
-            curr_inc = 0.001
-            fd = time*curr_inc/drop
+            #TODO, modify the cpl to get these params
+            #drop = 4000.0  #this is from Pcw0 as well, but we would need cpl to return it...
+            #curr_inc = 0.001
+            fd = time*dc_curr_inc/drop
 
             #plot the entire data set
             ax2.plot(fd,fy0,"o--") 
@@ -419,11 +538,16 @@ if __name__ == "__main__":
             #phase calculations - TBD how to do this for our system
             #if DC is zero (or small), then subtracting off the (mean force)*time
             #actually creates a helix.
-            #what is going on, and how can we fix it.  
-            phi_y =  2*np.pi*(y0 - np.mean(fy0)*time*0.01 - y0[0])
+            #what is going on, and how can we fix it.
+
+            #TODO: another hardwired value to fix
+            phi_y =  2*np.pi*(y0 - np.mean(fy0)*time*dt - y0[0])
             dphi_y = 2*np.pi*(fy0-np.mean(fy0))
             
             ax2.scatter(phi_y,dphi_y) #,"o--") #,c=type,s=size,cmap=mycmap)
+
+            #TODO document this plot_time
+            #seriously, I actually don't understand it
             plot_time = int(starttime/writemovietime)
             scatter2=ax2.scatter(phi_y[plot_time],dphi_y[plot_time],
                                  marker="o",s=100,c="magenta",zorder=9)
@@ -456,8 +580,11 @@ if __name__ == "__main__":
             
     #-----------------------------------------------------------------
     #finally animate everything
+    #the arguments sent to to the animate subroutine change by movie style
+    #not that I used a new animate_with_phase() routine to deal with the side-by-side
     #-----------------------------------------------------------------
 
+    #single frame/1x1 plot
     if movie_type == "Simple":
         #this is from the general library
         function=cpl.animate
@@ -468,41 +595,35 @@ if __name__ == "__main__":
                data_type,None)
         
     elif "animate" in movie_type:
-        #note this is local
-        function=animate_with_phase
-        fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
-        
-        if movie_type == "animate":
-            fargs=(scatter1,
-                   datafile_prefix,
-                   force_template,
-                   force_text,
-                   data_type,
-                   (scatter2,phi_y,dphi_y))   #extra args
+       #multiframe/1x2 plot
+       #note this is locally defined,
+       #a distinct function from it's 'parent' cpl.animate()
+       function=animate_with_phase
+       
+       if movie_type == "animate":
+          #phase diagram, as in animate
+          extra_args=[scatter2,phi_y,dphi_y] #partial list, will add to this
+          
+       elif movie_type == "animate_fd_v0":
+          extra_args=[scatter2,fd,fy0]
+       elif movie_type == "not yet coded":
+          extra_args=[scatter2,time,y0]
+      
+       #the extra args above are unique to the plot type,
+       #both functions benefit from these variables
+       extra_args+=[shift,drop,dc_curr_incr,verbose,decifactor]
+         
+       fargs=(scatter1, datafile_prefix, force_template, force_text,
+              data_type,extra_args)   
             
-        elif movie_type == "animate_fd_v0":
-
-            fargs=(scatter1,
-                   datafile_prefix,
-                   force_template,
-                   force_text,
-                   data_type,
-                   (scatter2,fd,fy0))   #extra args
             
-        #following should resize system and pad, but with 1x1 grid
-        #causes function to error
-        fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
+       #following should resize system and pad, but with 1x1 grid
+       #causes function to error
+       #if movie_type != "Simple":
+       fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
 
-    else:
-        fargs=(scatter1,
-               datafile_prefix,
-               force_template,
-               force_text,
-               data_type,
-               (scatter2,time,y0))   #extra args
-        
-
-        
+       
+    #fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
     ani = animation.FuncAnimation(fig, 
                                   function,
                                   range(starttime,maxtime,time_inc), 
@@ -512,11 +633,13 @@ if __name__ == "__main__":
         
 
 
-    #make a movie
+    #option to look at a single frame that you set up for the animation
     if image_test == True:
-        plt.savefig("test.png")
+        plt.savefig(image_test_name)
     
     elif movie_type == "Simple" or "animate" in movie_type:
+
+        #make a movie
         
         #changing the fps should speed/slow the visual rate
         #do not change the extra_args unless you know what you're doing
