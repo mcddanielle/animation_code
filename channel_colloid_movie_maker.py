@@ -5,6 +5,15 @@ A simple example of an animated plot
 SOURCE: http://matplotlib.org/examples/animation/simple_anim.html
 #to make a gif:
 https://eli.thegreenplace.net/2016/drawing-animated-gifs-with-matplotlib/
+
+movie_type 
+"simple"        # one panel standard, single window
+"animate"       # two panels, side by side, phase diagram
+"animate_fd_v0" # two panels, side by side, Force-Velocity diagram
+
+Data files format
+smtest (single binary), ascii (velocity_data/XV...integer), binary (*npy)
+[0="smtest", 1="ascii", 2="npy style binary"]
 """
 
 #numeric and basic plotting libraries
@@ -35,6 +44,7 @@ import colloid_plot_library as cpl
 
 plt.rc('font', size=20)
 
+      
 ################################################################
 def get_command_args(argv):
 
@@ -43,16 +53,24 @@ def get_command_args(argv):
    ############################################################
    outputfile="Supp1.mp4"
    inputfile = "Pcw0"
-   movie_type = "Simple"
+   movie_type = "simple"
    data_type = 0  #smtest is fastest (0 is preferable)
    zoom=True
-   disk_size=200  
+
+   #hard coded by what "looks good" basically a ratio of system size
+   #and fig size to make the particles look the size
+   #of their interaction length -
+   #this is tricky with this system since they don't have a well defined size.
+   disk_size=200
+   
    starttime=0 #int(3*10000/4.0)
-   corr = False
+   corr = True #False
    image_test = True
    image_test_name = "test.png"
    verbose = False
-   shift = False #hardwired for now, can't do any new ones
+   #the following are hardwired for now, for time
+   shift = False 
+   n_corr=20.0 #number of troughs in the corrugations
 
    #############################################################
    #put all of the flags in a string for a rudimentary help menu
@@ -75,8 +93,16 @@ def get_command_args(argv):
          plottime = str(arg)
       elif opt in ("-o", "--outputfile"):
          outputfile = str(arg)
+         
       elif opt in ("-m", "--movie_type"):
          movie_type = str(arg)
+
+         #ADD ERROR CHECKING
+         if movie_type not in ("simple","animate","animate_fd_v0"):
+            print("can't process movie_type %s"%(movie_type))
+            print("options are '%s' '%s' '%s'"%("simple","animated","animated_fd_vy"))
+            sys.exit()
+            
       elif opt in ("-d", "--data_type"):
          data_type = int(arg)
       elif opt in ("-z", "--zoom"):
@@ -93,9 +119,14 @@ def get_command_args(argv):
          image_test_name = arg
       elif opt in ("-v","--verbose"):
          verbose = arg
-         
+
+   parameters = [outputfile,inputfile,movie_type,data_type,
+                 zoom,disk_size,starttime,corr,image_test,
+                 image_test_name,verbose,shift,n_corr]
+      
+      
    #wrap into a hash instead?
-   return (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift)
+   return parameters
 
 ##########################################################
 #ADD CONTOUR PLOT
@@ -123,11 +154,9 @@ def add_contour(ax,L,N,corrugated = True):
     X, Y = np.meshgrid(X, Y)
 
     Z_mag = 2.0 # set by what "looks good"
-    
-    if corrugated == False:
-        Z = Z_mag*np.sin(2*np.pi*X/L)
-    else:
-        Z = np.sin(2*np.pi*Y/a_p) + Z_mag*np.sin(2*np.pi*X/L)
+    Z = Z_mag*np.sin(2*np.pi*X/L)
+    if corrugated == True:
+        Z += np.sin(2*np.pi*Y/a_p) 
 
     cmap=cm.coolwarm_r
 
@@ -337,7 +366,7 @@ def animate_with_phase(i,scatter1,fileprefix,
         else:
             return scatter1,scatter2
             
-    #"Simple" mode
+    #"simple" mode
     #update the text label for the new time
     if force_template:
         return force_text,scatter1
@@ -350,50 +379,14 @@ def animate_with_phase(i,scatter1,fileprefix,
 
 if __name__ == "__main__":
 
-    (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift) = get_command_args(sys.argv[1:])
-   
-    #verbose = False
-    #image_test = True #if true, make a png instead of a movie to look at the "frame"
-    #image_test = False
-    
-    #name of the movie file - make this anything you want
-    #TODO command line arg
-    #outputfile="Supp1.mp4"
-
-    #name of parameter file, this varies by simulation (Pa0, Pcw0, etc)
-    #inputfile = "Pcw0"
-    
-    #this is because I'm adding a second subplot
-    #TODO command line arg
-
-    '''
-    if 1:
-        movie_type = "Simple"        # one panel standard, single window
-    elif 1:
-        movie_type = "animate"       # two panels, side by side, phase diagram
-    else:
-        movie_type = "animate_fd_v0" # two panels, side by side, Force-Velocity diagram
-    '''
-        
-    ###########################################################################
-    #Data files format
-    #smtest (single binary), ascii (velocity_data/XV...integer), binary (*npy)
-    #[0="smtest", 1="ascii", 2="npy style binary"]
-    ############################################################################
-    #TODO command line arg
-
-    #data_type = 0  #smtest is fastest (0 is preferable)
-
-    #-----------------------------------------------------------------------------------
-    #get data for initial frame, this is either smtest, or one of the alternate formats
-    #-----------------------------------------------------------------------------------
+    (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift,n_corr) = get_command_args(sys.argv[1:])
 
     if verbose == True:
         print_dt(data_type)
         print("Getting system size and times from %s",inputfile)
 
     #get the data from Pcw0 - hardwired for a certain format
-    #this could be improved
+    #this could be improved - with a has for instance
     parameters_MD = cpl.get_input_data(inputfile)
     Sx=parameters_MD[0]
     Sy=parameters_MD[1]
@@ -412,19 +405,11 @@ if __name__ == "__main__":
     if zoom == True:
         Sx[1]=Sx[1]/2.0
     
-    #hard coded by what "looks good" basically a ratio of system size
-    #and fig size to make the particles look the size
-    #of their interaction length -
-    #this is tricky with this system since they don't have a well defined size.
-
-    #disk_size=200  
 
     #######################################################################
     #times - may adjust if your initial sampling was too many / too long
     #######################################################################
-
-
-    #starttime=0 #int(3*10000/4.0) 
+    #starttime (command line args) 
     time_inc=writemovietime     #make larger if the movie is too detailed
     maxtime=maxtime - time_inc  #make lesser if the movie is too long
     
@@ -432,7 +417,7 @@ if __name__ == "__main__":
     #set up a 1x1 plot in a subroutine
     #---------------------------
 
-    if movie_type == "Simple":
+    if movie_type == "simple":
         #1x1 plot
         fig,ax1 = cpl.format_plot(Sx=Sx,Sy=Sy)
     else:
@@ -444,7 +429,7 @@ if __name__ == "__main__":
                                       movieoption=movie_type)
 
     #---------------------------
-    #plot the energy landscape
+    #plot the energy landscape- it would never be pins in channel system
     #---------------------------
     if 0:
         #pinning array 
@@ -452,11 +437,8 @@ if __name__ == "__main__":
     else:
         #use a contour plot to show the landscape,
         #corr = True/False turns off/on the corrugations in the plot
-        corr = False
-        corr = True
-        #TODO document and understand the 20.
-        #20 is arbitrary... size measure
-        add_contour(ax1,Sy[1],20.0,corrugated = corr)
+
+        add_contour(ax1,Sy[1],n_corr,corrugated = corr)
 
     #---------------------------
     #get and parse data
@@ -466,13 +448,12 @@ if __name__ == "__main__":
                                            starttime,
                                            movie_type="smovie")
 
-    #the following code may be used if the interesting behavior is happening too high/low on the
+    #the following code may be used
+    #if the interesting behavior is happening too high/low on the
     #screen, so the interesting behavior is obscured by the pbc.
     #when you shift the particle positions, you have to account for the pbc.
     #note that this is NOT a pythonic way to do this, so it is probably inefficient
 
-    #TODO, make shift an argument to animate, otherwise you have to hardcode it in
-    shift = False
     if shift == True:
         vertical_shift(yp)
     
@@ -486,7 +467,7 @@ if __name__ == "__main__":
     #color the driven particle differently than non-driven
     type[0] = 2
         
-    if movie_type == "Simple":
+    if movie_type == "simple":
         #make a two color map given types 1,2
         mycmap = colors.ListedColormap(['mediumseagreen','coral'])
     else:
@@ -499,7 +480,7 @@ if __name__ == "__main__":
     scatter1=ax1.scatter(xp,yp,c=type,s=size,cmap=mycmap,edgecolor='k')
 
     
-    if movie_type != "Simple":
+    if movie_type != "simple":
         #get the data to make either the phase plot or the vy vs. fd plot.  mainly hardwired.
 
         #notice that we are NOT using the DM developed data importer
@@ -563,7 +544,7 @@ if __name__ == "__main__":
     #add an annotation
     #note: "force" was for a different system, here time is relevant
     #-------------------------------------------------------------
-    if movie_type == "Simple":
+    if movie_type == "simple":
         if 1:
             force_template = r'time = %d'
         else:
@@ -585,7 +566,7 @@ if __name__ == "__main__":
     #-----------------------------------------------------------------
 
     #single frame/1x1 plot
-    if movie_type == "Simple":
+    if movie_type == "simple":
         #this is from the general library
         function=cpl.animate
         fargs=(scatter1,
@@ -619,7 +600,7 @@ if __name__ == "__main__":
             
        #following should resize system and pad, but with 1x1 grid
        #causes function to error
-       #if movie_type != "Simple":
+       #if movie_type != "simple":
        fig.tight_layout() #h_pad=-0.5,w_pad=1.0,pad=0.5)
 
        
@@ -637,7 +618,7 @@ if __name__ == "__main__":
     if image_test == True:
         plt.savefig(image_test_name)
     
-    elif movie_type == "Simple" or "animate" in movie_type:
+    elif movie_type == "simple" or "animate" in movie_type:
 
         #make a movie
         
