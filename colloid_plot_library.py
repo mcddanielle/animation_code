@@ -212,8 +212,12 @@ def format_plot(Sx=[0,36.5], Sy=[0,36.5],rows=1,columns=1,movieoption="simple"):
     #-----------------------------------
     ax1.set_xlabel("x")
     ax1.set_ylabel("y")
-    ax1.set_ylim(0,Sy[1])
-    ax1.set_xlim(0,Sx[1])
+    if type(Sy)=='list':
+        ax1.set_ylim(0,Sy[1])
+        ax1.set_xlim(0,Sx[1])
+    elif type(Sy)=='float':
+        ax1.set_ylim(0,Sy)
+        ax1.set_xlim(0,Sx)
     
     num_ticks=6
     ax1.xaxis.set_major_locator(ticker.MaxNLocator(num_ticks))

@@ -21,15 +21,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
-#for multiplots
+#for multiplots (not used, but could be)
 #import matplotlib.gridspec as gridspec
 
-#for axes labels
+#for axes labels (not used, but could be)
 #import matplotlib.ticker as ticker
 
-#used for contour plot to make background colors
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.colors import LightSource, Normalize
+#Not used (was used for contour plot to make background colors)
+#from mpl_toolkits.mplot3d import Axes3D
+#from matplotlib.colors import LightSource, Normalize
 from matplotlib import cm
 
 #to animate, obviously
@@ -38,9 +38,12 @@ import matplotlib.animation as animation
 #to work with files, call sys.exit(), etc
 import sys, getopt
 
-#functions written by D.M. to get and plot specific data files
-#import data_importerDM as di
+#--------------------------------------------------
+#functions written by D.M.
+#to get and plot specific data files
 import colloid_plot_library as cpl
+#read in Pa0 or Pcw0 with a dict/hash construct
+import smart_file_reader as sfr
 
 plt.rc('font', size=20)
 
@@ -379,6 +382,7 @@ def animate_with_phase(i,scatter1,fileprefix,
 
 if __name__ == "__main__":
 
+    #obviously the following is a mess, but makes for easier use.  TODO - clean up.
     (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift,n_corr) = get_command_args(sys.argv[1:])
 
     if verbose == True:
@@ -387,23 +391,24 @@ if __name__ == "__main__":
 
     #get the data from Pcw0 - hardwired for a certain format
     #this could be improved - with a has for instance
-    parameters_MD = cpl.get_input_data(inputfile)
-    Sx=parameters_MD[0]
-    Sy=parameters_MD[1]
-    radius=parameters_MD[2]
-    maxtime=parameters_MD[3]
-    writemovietime=parameters_MD[4]
-    drop=parameters_MD[5]
-    dc_curr_incr=parameters_MD[6]
-    dt=parameters_MD[7]
-    decifactor=parameters_MD[8]
+    parameters_MD_dict = sfr.get_input_data(inputfile)
+    Sx=parameters_MD_dict['SX']
+    #print(Sx)
+    Sy=parameters_MD_dict['SY']
+    radius=parameters_MD_dict['radius']
+    maxtime=parameters_MD_dict['maxtime']
+    writemovietime=parameters_MD_dict['writemovietime']
+    drop=parameters_MD_dict['drop']
+    dc_curr_incr=parameters_MD_dict['dc_curr_incr']
+    dt=parameters_MD_dict['dt']
+    decifactor=parameters_MD_dict['decifactor']
     
     #This is to zoom in along the x-axis
     #and cut some of the blank space, could tweak the aspect ratio more
 
     #zoom=True
     if zoom == True:
-        Sx[1]=Sx[1]/2.0
+        Sx=Sx/2.0
     
 
     #######################################################################
@@ -438,7 +443,7 @@ if __name__ == "__main__":
         #use a contour plot to show the landscape,
         #corr = True/False turns off/on the corrugations in the plot
 
-        add_contour(ax1,Sy[1],n_corr,corrugated = corr)
+        add_contour(ax1,Sy,n_corr,corrugated = corr)
 
     #---------------------------
     #get and parse data
