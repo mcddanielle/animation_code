@@ -117,7 +117,7 @@ if __name__ == "__main__":
                                          datafile_prefix,
                                          force_template,
                                          force_text,
-                                         data_type),
+                                         data_type,None),
                                   interval=20, blit=False)
 
         
