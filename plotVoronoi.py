@@ -1,8 +1,10 @@
+#!/usr/bin/env python3
+
 '''
 Danielle McDermott
 April 14, 2016  
 updated July 2, 2018
-Python 2 (trying Python 3)
+Python 3
 
 The is reasonably fast because it is based on Qhull,
 which is written in C
@@ -33,6 +35,7 @@ import numpy as np
 #import classColloid.plotColloid as plotColloid //OLD
 import colloid_plot_library as cpl
 import data_importerDM as di
+import smart_file_reader as sfr #shannon's hash function
 
 import sys
 
@@ -119,8 +122,8 @@ def calc_max_area(vor):
     
     #find the area that most of the particles sit within
     if 0:
-        print freq
-        print bins
+        print( freq )
+        print( bins )
         exit()
 
     #estimate where to cut off using the freq of areas - 80%?
@@ -470,7 +473,7 @@ if __name__ == "__main__":
     data_types = [0,1,2] #["smtest", "ascii", "binary"]
 
     #the one we will use
-    data_type = data_types[2]
+    data_type = data_types[0]
 
     if data_type == 0:
         print("Reading directly from smtest (binary)")
@@ -486,15 +489,27 @@ if __name__ == "__main__":
     #---------------------------------------------------------------
     inputfile = "Pa0"
     
-    (Sx, Sy, radius, maxtime, writemovietime ) = cpl.get_input_data(inputfile)
+    #(Sx, Sy, radius, maxtime, writemovietime )
+    #the smart_file_reader returns a hash, and we unpack the values
+    parameter_data = sfr.get_input_data(inputfile)
+    SX = parameter_data['SX']  #as called in file
+    SY = parameter_data['SX']
+    radius = parameter_data['radius']
+    maxtime = parameter_data['maxtime']
+    writemovietime = parameter_data['writemovietime']
 
     #plot at the value starttime
-    starttime=10000 #
+    #so much easier to read 
+    starttime=int(1E6) #1000000 #
 
-    SX = (Sx[1]-Sx[0])
-    SY = (Sy[1]-Sy[0])
+    #box dimensions
+    Sx = [0.0,SX]
+    Sy = [0.0,SY]
 
-    size=5  #hard coded by what "looks good"
+    #size to plot vortices/colloids
+    #hard coded by what "looks good"
+    size=5  
+
 
     #---------------------------
     #set up a 1x1 plot in a subroutine
