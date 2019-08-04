@@ -556,7 +556,6 @@ if __name__ == "__main__":
     #print voro_stat_data to file
     f = open("voro_stat_%d.dat"%(starttime),'w')
     f.write("%d %f %f %f %f %f\n"%(starttime,pN[0],pN[1],pN[2],pN[3],pedge/(pcenter+pedge)))
-    f.write("hello world")
     f.close()
 
     #plot it! be careful with max_area
