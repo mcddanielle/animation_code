@@ -19,6 +19,7 @@ Use the scipy library to make a Voronoi Tessellation
 of a 2D system of particles with periodic boundary conditions
 -make plots of individual frames
 -analyze statistics of the percentages of cells based on side number.
+-where are the stats printed?
 
 BE CAREFUL WITH THE max_area PARAMETERS
 '''
@@ -46,7 +47,7 @@ import sys
 #the number of sides the particular cell has
 #4=blue, 5-lightblue, etc with a linear shift in 
 
-colors = ['blue','royalblue','gray','firebrick']
+colors = ['cornflowerblue','skyblue','lightgray','red'] 
 plt.rc('font',size=22)
 ###############################################################
 
@@ -164,8 +165,10 @@ def voronoi_statistics(vor,max_area=None,periodic=False,SX=None,SY=None,
     pcenter=0   #total cells with area < max_area, these are "center"
     pedge=0     #
 
+
     #count based on side number
     #for region in vor.regions:
+    
     for index in vor.point_region:
         region=vor.regions[index]
 
@@ -226,7 +229,6 @@ def voronoi_statistics(vor,max_area=None,periodic=False,SX=None,SY=None,
                     #otherwise count the particle no matter what
                     pN[len(polygon)-4]+=1
                     pcenter+=1
-
 
             else:
                 pedge+=1
@@ -543,9 +545,19 @@ if __name__ == "__main__":
     #calculate the tessellation using scipy
     vor_data=calc_voronoi_tessellation(xp,yp)
 
+
     #run through the data structure, accumulate information about the cells
     #max_area=None (default) - be careful with this, 
-    voronoi_statistics(vor_data)  
+    pN, pcenter, pedge =  voronoi_statistics(vor_data)
+
+    #normalize pN
+    pN/=pcenter
+    
+    #print voro_stat_data to file
+    f = open("voro_stat_%d.dat"%(starttime),'w')
+    f.write("%d %f %f %f %f %f\n"%(starttime,pN[0],pN[1],pN[2],pN[3],pedge/(pcenter+pedge)))
+    f.write("hello world")
+    f.close()
 
     #plot it! be careful with max_area
     plot_voronoi_tessellation(ax1,vor_data,xp,yp,max_area=2.0)
@@ -553,7 +565,9 @@ if __name__ == "__main__":
 
     #add the particles on top of the tessellation
     ax1.scatter(xp,yp,s=size,zorder=10,facecolor='k')
-
+    ax1.set_xlim(*Sx)
+    ax1.set_ylim(*Sy)
+    
     #add a label such as (a)
     label = False
     if label:
