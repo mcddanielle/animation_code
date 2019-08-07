@@ -38,7 +38,9 @@ import colloid_plot_library as cpl
 import data_importerDM as di
 import smart_file_reader as sfr #shannon's hash function
 
-import sys
+#to work with files, call sys.exit(), etc
+import sys, getopt
+
 
 #########################################################
 #color code for Voronoi faces
@@ -62,7 +64,8 @@ def get_command_args(argv):
    inputfile = "Pa0"
    data_type = 0  #smtest is fastest (0 is preferable)
    starttime=int(1E6) #1000000 #
-
+   disk_size=5
+   
    #the following are hardwired for now, for time
    shift = False 
 
@@ -609,16 +612,19 @@ if __name__ == "__main__":
     #########################################
     #open datafile
     #########################################
-    f = open("voro_stat_%d.dat"%(starttime),'w')
+    f = open("voro_stat.dat",'w')
     
     #---------------------------
     #get and parse data
     #---------------------------
     datafile_prefix = "velocity_data/XV_data_t="
 
-    time_array = np.arange(starttime,endtime,interval)
+    time_array = np.arange(starttime,maxtime,writemovietime)
 
     for time in time_array:
+        if verbose == True:
+           print(time)
+           
         #if data_type == 0 , this will process all of smtest
         id,type,xp,yp = cpl.get_and_parse_data(data_type,
                                            time,
@@ -642,7 +648,7 @@ if __name__ == "__main__":
         #normalize pN
         pN/=pcenter
     
-        f.write("%d %f %f %f %f %f\n"%(starttime,pN[0],pN[1],pN[2],pN[3],pedge/(pcenter+pedge)))
+        f.write("%d %f %f %f %f %f\n"%(time,pN[0],pN[1],pN[2],pN[3],pedge/(pcenter+pedge)))
     
     #########################################
     #close datafile
