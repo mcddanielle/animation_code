@@ -24,6 +24,21 @@ plt.rc('font', size=20)
 
 
 ################################################################
+def print_dt(data_type):
+    '''just a little function for verbose printing
+    '''
+    
+    if data_type == 0:
+        print("Reading directly from smtest (binary)")
+        print("Writing velocity_data/XV*npy files")
+    elif data_type == 1:
+        print("Reading from velocity_data/XV* files (ascii)")
+        print("Writing velocity_data/XV*npy files")
+    elif data_type == 2:
+        print("Reading velocity_data/XV*npy files (binary)")
+
+    return
+################################################################
 def get_and_parse_data(data_type,starttime,
                        datafile_prefix = "velocity_data/XV_data_t=",
                        movie_type="smovie"):

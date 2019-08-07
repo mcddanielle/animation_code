@@ -176,21 +176,6 @@ def add_contour(ax,L,N,corrugated = True):
     #ax1.set_yticks([])
     return
 
-################################################################
-def print_dt(data_type):
-    '''just a little function for verbose printing
-    '''
-    
-    if data_type == 0:
-        print("Reading directly from smtest (binary)")
-        print("Writing velocity_data/XV*npy files")
-    elif data_type == 1:
-        print("Reading from velocity_data/XV* files (ascii)")
-        print("Writing velocity_data/XV*npy files")
-    elif data_type == 2:
-        print("Reading velocity_data/XV*npy files (binary)")
-
-    return
 
 ################################################################
 def vertical_shift(yp,SY=36.5,percent_shift=0.25):
@@ -386,7 +371,7 @@ if __name__ == "__main__":
     (outputfile,inputfile,movie_type,data_type,zoom,disk_size,starttime,corr,image_test,image_test_name,verbose,shift,n_corr) = get_command_args(sys.argv[1:])
 
     if verbose == True:
-        print_dt(data_type)
+        cpl.print_dt(data_type)
         print("Getting system size and times from %s",inputfile)
 
     #get the data from Pcw0 - hardwired for a certain format
