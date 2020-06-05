@@ -26,7 +26,7 @@ plt.rc('font', size=20)
 ################################################################
 def get_command_args(argv):
    plottime = ''
-   file_output_type = ".png"
+   file_output_type = ".pdf"
    try:
       opts, args = getopt.getopt(argv,"ht:f:",["time=","file="])
    except getopt.GetoptError:
@@ -51,25 +51,27 @@ if __name__ == "__main__":
 
 
     try:
-        plot_time, file_output_type = get_command_args(sys.argv[1:])
+       plot_time, file_output_type = get_command_args(sys.argv[1:])
     except:
-        plot_time=9000 
+       plot_time=9
     print("plotting system at time: ", plot_time)
+    print("file output type: ", file_output_type)
     
     verbose = 1
     get_ascii_data = 1
     #---------------------------
     #system specific variables
     #---------------------------
-    disk_size=15
 
     Sx=[0,60.0]
     Sy=[0,60.0]
 
+    scale = 1
+    disk_size=15*scale
     #---------------------------
     #set up a 1x1 plot in a subroutine
     #---------------------------
-    fig,ax1 = cpl.format_plot(Sx=Sx,Sy=Sx)
+    fig,ax1 = cpl.format_plot(Sx=Sx,Sy=Sx,rows=scale,columns=scale)
 
     #------------------------------------------------------------------------
     #get data for initial frame, 
@@ -107,7 +109,7 @@ if __name__ == "__main__":
 
     size  = np.zeros(len(type))
     for k in range(len(type)):
-        if type[k]==1:
+        if type[k]==2:
             size[k]= 1.4**2 * disk_size
         else:
             size[k]= disk_size
